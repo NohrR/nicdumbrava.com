@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Diagonal Split Portfolio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: grey;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* =========================
+     TRANSITION LOCK
+     ========================= */
+  .interaction-blocker{
+    position: fixed;
+    inset: 0;
+    display: none;
+    z-index: 9998;           /* below title (9999), above everything else */
+    background: transparent;
+    cursor: default;         /* ✅ no loading spinner */
+    user-select: none;
+  }
+
+  .container.transitioning *{
+    pointer-events: none !important;
+  }
+  .container.transitioning .interaction-blocker{
+    display: block;
+    pointer-events: auto !important;
+  }
+
+  /* Prevent hover visuals during transitions */
+  .container:not(.show-projects):not(.show-bio):not(.transitioning) .side:hover {
+    filter: brightness(0.6);
+    transform: scale(1.03);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.5);
+    z-index: 2;
+  }
+
+  .side {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    transition:
+      transform 0.6s ease,
+      filter 0.4s ease,
+      box-shadow 0.4s ease,
+      clip-path 0.6s ease,
+      opacity 0.4s ease;
+    filter: brightness(0.9);
+    will-change: transform, clip-path, filter, opacity;
+  }
+
+  .side.left {
+    background-image: url("https://capricemachineworks.ca/wp-content/uploads/2022/08/cnc-milling-machine.webp");
+    clip-path: polygon(0 0, 60% 0, 40% 100%, 0 100%);
+  }
+
+  .side.right {
+    background-image: url("https://cdn.rit.edu/images/facility/MachineShop.jpg");
+    clip-path: polygon(60% 0, 100% 0, 100% 100%, 40% 100%);
+  }
+
+  /* ✅ ALWAYS ABOVE EVERYTHING */
+  .center-title {
+    position: fixed;
+    top: 50%;
+    left: 52.7%;
+    transform: translate(-50%, -50%);
+    font-size: 5rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.7);
+    z-index: 9999;
+    pointer-events: none;
+    transition: all 0.6s ease;
+    white-space: nowrap;
+  }
+
+  .side-label {
+    position: absolute;
+    bottom: 10%;
+    color: rgb(9, 255, 255);
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.85);
+  }
+  .side.left .side-label  { left: 15%; }
+  .side.right .side-label { right: 20%; text-align: right; }
+
+  .container.show-projects .side,
+  .container.show-bio .side {
+    filter: blur(3px) brightness(0.4);
+  }
+
+  .container.show-projects .side.left {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    transform: scale(1.08) translateX(-2%);
+    z-index: 1;
+  }
+  .container.show-projects .side.right {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .container.show-bio .side.right {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    transform: scale(1.08) translateX(2%);
+    z-index: 1;
+  }
+  .container.show-bio .side.left {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Title moves to top when any overlay is open */
+  .container.show-bio .center-title,
+  .container.show-projects .center-title {
+    top: 24px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    font-size: 2.6rem;
+    text-align: center;
+  }
+
+  /* ==========================================================
+     ✅ SMOOTH RETURN-TO-MENU FIX (prevents weird overlap/fade)
+     ========================================================== */
+
+  /* When leaving PROJECTS: ensure right side snaps back instantly,
+     and keep left visually on top while it morphs back. */
+  .container.returning-projects .side.left { z-index: 2; }
+  .container.returning-projects .side.right { z-index: 1; }
+
+  .container.returning-projects .side.right{
+    opacity: 1 !important; /* snap back; no fade-from-0 while left is morphing */
+    transition: transform 0.6s ease, filter 0.4s ease, box-shadow 0.4s ease, clip-path 0.6s ease !important;
+  }
+
+  /* When leaving BIO: same idea, but for the opposite side. */
+  .container.returning-bio .side.right { z-index: 2; }
+  .container.returning-bio .side.left  { z-index: 1; }
+
+  .container.returning-bio .side.left{
+    opacity: 1 !important;
+    transition: transform 0.6s ease, filter 0.4s ease, box-shadow 0.4s ease, clip-path 0.6s ease !important;
+  }
+
+  /* ---------------- Overlays ---------------- */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 100px 8% 48px;
+    background: radial-gradient(circle at top, rgba(15,23,42,0.85), rgba(15,23,42,0.95));
+    z-index: 10;
+    color: #f9fafb;
+    pointer-events: none;
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+
+  .overlay-content {
+    width: 100%;
+    max-width: 1100px;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .back-button {
+    align-self: flex-start;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(15,23,42,0.7);
+    color: #e5e7eb;
+    font-size: 0.9rem;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: background 0.2s ease, transform 0.1s ease;
+  }
+  .back-button:hover  { background: rgba(148,163,184,0.4); transform: translateY(-1px); }
+  .back-button:active { transform: translateY(1px); }
+
+  /* ---------------- Animations ---------------- */
+  @keyframes overlayFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes overlayFadeOut { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes panelFadeUp    { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes panelFadeDown  { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(12px); } }
+
+  /* ---------------- PROJECTS OVERLAY ---------------- */
+  .overlay-projects { transform: translateX(-40px); }
+
+  .container.show-projects:not(.closing) .overlay-projects {
+    display: flex;
+    pointer-events: auto;
+    transform: translateX(0);
+    animation: overlayFadeIn 650ms ease both;
+  }
+
+  .container.closing-projects .overlay-projects {
+    display: flex;
+    pointer-events: none;
+    transform: translateX(0);
+    animation: overlayFadeOut 450ms ease both;
+  }
+
+  .projects-shell{
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  /* ===========================
+    CUSTOM OVAL SCROLLBAR
+    =========================== */
+
+  /* Firefox */
+  .detail-body{
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148,163,184,0.65) transparent;
+  }
+
+  /* WebKit (Chrome, Edge, Safari) */
+  .detail-body::-webkit-scrollbar{
+    width: 10px;
+  }
+
+  .detail-body::-webkit-scrollbar-track{
+    background: transparent;
+  }
+
+  .detail-body::-webkit-scrollbar-thumb{
+    background: linear-gradient(
+      180deg,
+      rgba(148,163,184,0.85),
+      rgba(226,232,240,0.95)
+    );
+    border-radius: 999px;          /* oval shape */
+    border: 3px solid transparent; /* creates padding around thumb */
+    background-clip: content-box;
+  }
+
+  .detail-body::-webkit-scrollbar-thumb:hover{
+    background: linear-gradient(
+      180deg,
+      rgba(165,180,252,1),
+      rgba(56,189,248,1)
+    );
+  }
+
+  .detail-body::-webkit-scrollbar-thumb:active{
+    background: linear-gradient(
+      180deg,
+      rgba(99,102,241,1),
+      rgba(37,99,235,1)
+    );
+  }
+
+  .projects-layout{
+    width: min(1000px, 100%);
+    height: min(72vh, 650px);
+    background: rgba(15,23,42,0.98);
+    border-radius: 26px;
+    border: 1px solid rgba(148,163,184,0.7);
+    box-shadow: 0 24px 60px rgba(15,23,42,0.9);
+
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 18px;
+
+    padding: 18px;
+    overflow: hidden;
+    will-change: opacity, transform;
+  }
+
+  .container.show-projects:not(.closing-projects) .projects-layout{
+    animation: panelFadeUp 1100ms ease both;
+    animation-delay: 180ms;
+  }
+  .container.closing-projects .projects-layout{
+    animation: panelFadeDown 420ms ease both;
+  }
+
+  .projects-sidebar{
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .project-photo{
+    background: rgba(15,23,42,0.85);
+    border-radius: 18px;
+    border: 1px dashed rgba(148,163,184,0.8);
+    padding: 10px;
+  }
+
+  .photo-frame{
+    position: relative;
+    height: 120px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(15,23,42,0.9);
+  }
+
+  #projectPhotoImg{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 1;
+    transition: opacity 180ms ease;
+  }
+
+  .photo-caption{
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: #cbd5f5;
+    line-height: 1.3;
+  }
+  .photo-caption span{ opacity: 0.9; font-style: italic; }
+
+  .projects-sidebar-list{
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .section-title-sm{
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    text-align: center;
+  }
+
+  .section-subtitle-sm{
+    font-size: 0.8rem;
+    color: #cbd5f5;
+    line-height: 1.35;
+  }
+
+  .projects-list{
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 10px;
+    padding-left: 2px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .projects-list::-webkit-scrollbar{ width: 0; height: 0; display: none; }
+
+  .project-card{
+    width: 100%;
+    background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,64,175,0.9));
+    border-radius: 16px;
+    border: 1px solid rgba(148,163,184,0.6);
+    padding: 10px 14px 10px;
+    cursor: pointer;
+    box-shadow: 0 10px 28px rgba(15,23,42,0.8);
+    transition: box-shadow 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+  }
+
+  .project-card:hover{
+    box-shadow: 0 18px 40px rgba(15,23,42,0.9);
+    background: linear-gradient(135deg, rgba(30,64,175,0.96), rgba(56,189,248,0.9));
+    border-color: rgba(226,232,240,0.9);
+  }
+
+  .project-card.selected{
+    border-color: #e5e7eb;
+    box-shadow: 0 22px 55px rgba(15,23,42,1);
+  }
+
+  .project-summary{
+    height: 2.6em;
+    overflow: hidden;
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: #e5e7eb;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .project-card:hover .project-summary{ opacity: 1; transform: translateY(0); }
+
+  /* ===========================
+     ✅ SCROLLABLE DETAIL PANEL
+     =========================== */
+  .project-detail-panel{
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* keep rounded corners clipped; scrolling happens inside */
+    background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
+    border-radius: 20px;
+    border: 1px solid rgba(148,163,184,0.7);
+    padding: 16px 18px;
+  }
+
+  .detail-inner{
+    display: none;
+    height: 100%;
+    min-height: 0;
+  }
+  .detail-inner.active{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .detail-body{
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding-right: 6px;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: #e5e7eb;
+    margin-top: 10px;
+  }
+
+  .detail-title{
+    text-align: center;
+  }
+
+  @media (max-width: 1000px){
+    .center-title{ font-size: 3.4rem; }
+    .projects-layout { grid-template-columns: 1fr; height: min(78vh, 760px); }
+  }
+
+  /* ---------------- BIO OVERLAY ---------------- */
+  .overlay-bio { transform: translateX(40px); }
+
+  .container.show-bio:not(.closing) .overlay-bio {
+    display: flex;
+    pointer-events: auto;
+    transform: translateX(0);
+    animation: overlayFadeIn 650ms ease both;
+  }
+
+  .container.closing-bio .overlay-bio {
+    display: flex;
+    pointer-events: none;
+    transform: translateX(0);
+    animation: overlayFadeOut 450ms ease both;
+  }
+
+  .bio-shell{
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  .bio-grid{
+    width: min(1000px, 100%);
+    height: min(72vh, 650px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1.1fr 1fr;
+    gap: 18px;
+    padding: 18px;
+    border-radius: 26px;
+    border: 1px solid rgba(148,163,184,0.7);
+    background: rgba(15,23,42,0.98);
+    box-shadow: 0 24px 60px rgba(15,23,42,0.9);
+    overflow: hidden;
+    will-change: opacity, transform;
+  }
+
+  .container.show-bio:not(.closing-bio) .bio-grid{
+    animation: panelFadeUp 1100ms ease both;
+    animation-delay: 180ms;
+  }
+  .container.closing-bio .bio-grid{
+    animation: panelFadeDown 420ms ease both;
+  }
+
+  .bio-card{
+    border-radius: 22px;
+    border: 1px solid rgba(148,163,184,0.55);
+    background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
+    box-shadow: 0 14px 40px rgba(15,23,42,0.75);
+    padding: 18px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .bio-card.bio-biography{ grid-column: 1 / -1; }
+
+  .bio-card h2{
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: #a5b4fc;
+    margin-bottom: 10px;
+  }
+
+  .bio-body{
+    min-height: 0;
+    overflow: auto;
+    padding-right: 6px;
+    color: #e5e7eb;
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  .bio-list{ margin: 0; padding-left: 18px; }
+  .bio-list li{ margin-bottom: 6px; }
+
+  @media (max-width: 900px){
+    .bio-grid{
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
+      height: min(80vh, 760px);
+    }
+    .bio-card.bio-biography{ grid-column: auto; }
+  }
+</style>
+</head>
+
+<body>
+<div class="container">
+  <div class="interaction-blocker" aria-hidden="true"></div>
+
+  <div class="center-title">NICOLAS DUMBRAVA</div>
+
+  <div class="side left">
+    <div class="side-label">Projects &amp; Skills</div>
+  </div>
+
+  <div class="side right">
+    <div class="side-label">Knowledge & Education</div>
+  </div>
+
+  <!-- PROJECTS OVERLAY -->
+  <div class="overlay overlay-projects">
+    <div class="overlay-content">
+      <button class="back-button" type="button">← Back to main</button>
+
+      <div class="projects-shell">
+        <div class="projects-layout">
+
+          <aside class="projects-sidebar">
+            <div class="project-photo">
+              <div class="photo-frame">
+                <img id="projectPhotoImg" src="https://picsum.photos/600/400?random=1" alt="">
+              </div>
+
+              <p class="photo-caption">
+                <strong id="projectPhotoTitle">Select a project</strong><br>
+                <span id="projectPhotoCaption">Click a card to swap the image.</span>
+              </p>
+            </div>
+
+            <div class="projects-sidebar-list">
+              <div class="section-title-sm">Projects</div>
+              <p class="section-subtitle-sm">
+                Click on the various cards in this list to see what projects I've worked on.
+              </p>
+
+              <div class="projects-list">
+
+                <article class="project-card selected"
+                  data-target="detail-milling-block"
+                  data-photo="https://picsum.photos/600/400?random=1"
+                  data-photoalt="CNC fixture project photo"
+                  data-phototitle="Project title"
+                  data-photocaption="Project description">
+                  <header class="project-header">
+                    <div class="project-title-row">
+                      <h2>Milling Block</h2><br>
+                      <span class="project-meta"><b>Manufacturing</b></span>
+                    </div>
+                    <div class="skill-tags">
+                      <span><b>Material:</b> Mild Steel</span>
+                    </div>
+                  </header>
+                  <p class="project-summary">A milling block machined from mild steel bar stock</p>
+                </article>
+
+                <article class="project-card"
+                  data-target="detail-drill-gauge"
+                  data-photo="https://picsum.photos/600/400?random=2"
+                  data-photoalt="Dashboard project screenshot"
+                  data-phototitle="Project title"
+                  data-photocaption="Project description">
+                  <header class="project-header">
+                    <div class="project-title-row">
+                      <h2>Drill Gauge</h2><br>
+                      <span class="project-meta"><b>Manufacturing</b></span>
+                    </div>
+                    <div class="skill-tags">
+                      <span><b>Material: </b> Mild Steel</span>
+                    </div>
+                  </header>
+                  <p class="project-summary">Accurately produced drill gauge with specific requirements</p>
+                </article>
+
+                <article class="project-card"
+                  data-target="detail-tap-handle"
+                  data-photo="https://picsum.photos/600/400?random=3"
+                  data-photoalt="Tap handle project photo"
+                  data-phototitle="Project title"
+                  data-photocaption="Project description">
+                  <header class="project-header">
+                    <div class="project-title-row">
+                      <h2>Tap Handle</h2><br>
+                      <span class="project-meta"><b>Manufacturing</b></span>
+                    </div>
+                    <div class="skill-tags">
+                      <span><b>Material: </b>Mild Steel (5/8&quot; bar stock handle components)</span>
+                    </div>
+                  </header>
+                  <p class="project-summary">Custom tap handle machined from bar stock.</p>
+                </article>
+
+                <article class="project-card"
+                  data-target="detail-tap-jaws"
+                  data-photo="https://picsum.photos/600/400?random=4"
+                  data-photoalt="Tap handle jaws project photo"
+                  data-phototitle="Project title"
+                  data-photocaption="Project description">
+                  <header class="project-header">
+                    <div class="project-title-row">
+                      <h2>Tap Handle Jaws</h2><br>
+                      <span class="project-meta"><b>Manufacturing</b></span>
+                    </div>
+                    <div class="skill-tags">
+                      <span><b>Material: </b>Mild steel (3/4" square key stock)</span>
+                    </div>
+                  </header>
+                  <p class="project-summary">Manufactured tap handle jaws</p>
+                </article>
+
+                <article class="project-card"
+                  data-target="detail-robot-flange"
+                  data-photo="https://picsum.photos/600/400?random=5"
+                  data-photoalt="Tap handle project photo"
+                  data-phototitle="Project title"
+                  data-photocaption="Project description">
+                  <header class="project-header">
+                    <div class="project-title-row">
+                      <h2>Robot End-of-Arm Flange</h2><br>
+                      <span class="project-meta"><b>Manufacturing</b></span>
+                    </div>
+                    <div class="skill-tags">
+                      <span><b>Material: </b>Aluminum puck/bar stock cutouts</span>
+                    </div>
+                  </header>
+                  <p class="project-summary">Created a UR5 end-of-arm flange</p>
+                </article>
+
+              </div>
+            </div>
+          </aside>
+
+          <section class="project-detail-panel">
+
+            <div class="detail-inner active" id="detail-milling-block">
+              <h2 class="detail-title">Milling Block</h2>
+
+              <div class="detail-body">
+                <p>
+                <b>Processes:</b> Milling, facing, drilling/tapping, reaming, broaching, slotting, surface grinding<br><br>
+                <b>Material:</b> Mild steel<br><br>
+                Machined a milling block from mild steel bar stock, completing faces, profiles, holes, and slots to drawing-defined tolerances. Used in-process verification throughout manufacturing with a Go/No-Go gauge.<br><br>
+                <b>Technical Scope:</b><br><br>
+                ● Face and square stock close to final dimensions<br>
+                ● Drill and tap required holes<br>
+                ● Machine features, slots, and profiles<br>
+                ● Complete optional broaching and surface grinding to final dimensions (bonus work)<br>
+                ● Maintain drawing tolerances and surface finish requirements<br><br>
+                <b>Work Performed</b><br><br>
+                ● Completed the majority of machining on a vertical mill; finished final surface quality and dimensions on a surface grinder<br>
+                ● Laid out features using a surface plate and height gauge<br>
+                ● Referenced and re-established datums during re-orientation using an edge finder<br>
+                ● Sequenced operations to maximize efficiency while maintaining accuracy (including optional broaching + grinding)<br><br>
+                <b>Tools &amp; Equipment</b><br><br>
+                ● Vertical mill, surface grinder, arbour press + broach kit<br>
+                ● Mitutoyo Absolute digital caliper, height gauge + surface plate, edge finder<br>
+                ● Go/No-Go gauge used throughout production<br><br>
+                <b>Quality &amp; Verification</b><br><br>
+                ● Verified dimensions after major operations and during setup changes<br>
+                ● Used a Go/No-Go gauge for compliance checks during machining and at project completion<br>
+                </p>
+              </div>
+            </div>
+
+            <!-- ✅ FIX 1: Drill Gauge now uses .detail-body so it scrolls like Milling Block -->
+            <div class="detail-inner" id="detail-drill-gauge">
+              <h2 class="detail-title">Drill Gauge</h2>
+
+              <div class="detail-body">
+                <p>
+                  <b>Processes:</b> Layout, drilling, hand finishing, surface grinding<br><br>
+                  <b>Material:</b> Mild steel<br><br>
+                  Produced a drill gauge requiring accurate hole sizing, flatness, and a drawing-specified angle (121°). Emphasized layout accuracy, manual shaping, and precision finishing using surface grinding.<br><br>
+
+                  <b>Technical Scope:</b><br><br>
+                  ● Layout using surface plate/height gauge techniques (including sine bar use)<br>
+                  ● Drill hole sizes to match intended gauge function<br>
+                  ● Cut and file profile by hand to final shape<br>
+                  ● Surface grind for flatness and finish<br>
+                  ● Fully deburr and hand-finish all edges<br><br>
+
+                  <b>Work Performed</b><br><br>
+                  ● Performed layout using height gauge on a surface table, punches, scribes, and a sine bar method to achieve the specified angle<br>
+                  ● Drilled holes to required sizes on a drill press<br>
+                  ● Hand-shaped the profile (sawing + filing) and finished with emery cloth<br>
+                  ● Surface ground the part to improve flatness and final finish<br><br>
+
+                  <b>Tools &amp; Equipment</b><br><br>
+                  ● Drill press, surface grinder<br>
+                  ● Hand tools: hacksaw, files, emery cloth<br>
+                  ● Layout: sine bar, punches/scribes, height gauge + surface plate<br><br>
+
+                  <b>Quality &amp; Verification</b><br><br>
+                  ● Verified hole sizing for functional gauging<br>
+                  ● Achieved flatness and controlled finish via surface grinding<br>
+                  ● Confirmed angle and geometry against print requirements<br>
+                </p>
+              </div>
+            </div>
+
+            <div class="detail-inner" id="detail-tap-handle">
+              <h2 class="detail-title">Tap Handle</h2>
+
+              <div class="detail-body">
+                <p>
+                  <b>Processes:</b> Turning, tapering, knurling, threading, hand finishing<br><br>
+                  <b>Material:</b> Mild steel (5/8" bar stock handle components)<br><br>
+                  Machined a tap handle over multiple sessions across ~2 months, requiring repeatability and dimensional consistency so all components assembled correctly at final fit-up.<br><br>
+
+                  <b>Technical Scope:</b><br><br>
+                  ● Lathe operations to produce handle components to print<br>
+                  ● Taper setup calculations and execution<br>
+                  ● Knurling and controlled hand finishing<br>
+                  ● Threading/tapping methods to match print requirements<br>
+                  ● Maintain consistency across parts produced weeks apart<br><br>
+
+                  <b>Work Performed</b><br><br>
+                  ● Turned and finished handle components primarily on the lathe<br>
+                  ● Hand-finished in the lathe using emery cloth<br>
+                  ● Produced consistent threads (tapped by hand with guidance from the chuck setup)<br>
+                  ● Managed repeatability across multiple builds, focusing on consistent dimensions and assembly fit<br><br>
+
+                  <b>Tools &amp; Equipment</b><br><br>
+                  ● Lathe<br>
+                  ● Measuring: micrometre (during finishing), calliper as needed<br>
+                  ● Knurling tool (diamond knurl)<br><br>
+
+                  <b>Quality &amp; Verification</b><br><br>
+                  ● Print-controlled tolerances; final assembly confirmed functional fit and consistency between parts made at different times<br>
+                </p>
+              </div>
+
+            </div>
+
+            <div class="detail-inner" id="detail-tap-jaws">
+              <h2 class="detail-title">Tap Handle Jaws</h2>
+
+              <div class="detail-body">
+                <p>
+                  <b>Processes:</b> Layout, drilling/tapping, milling slots, hand profiling/fit-up<br><br>
+                  <b>Material:</b> Mild steel (3/4" square key stock)<br><br>
+                  Manufactured tap handle jaws requiring functional alignment, full thread engagement from either side, and proper clamping behaviour. Balanced functional accuracy with hand-finished profile quality.<br><br>
+
+                  <b>Technical Scope:</b><br><br>
+                  ● Layout on square stock<br>
+                  ● Drill and tap per print<br>
+                  ● Mill jaw slots/features<br>
+                  ● Assemble and hand-profile as a matched set<br>
+                  ● Ensure bolts thread fully and jaws align under tightening<br><br>
+
+                  <b>Work Performed</b><br><br>
+                  ● Laid out, drilled (drill press), and tapped the jaw fastener holes<br>
+                  ● Milled tap slots on the mill<br>
+                  ● Screwed jaws together and hand-filed rounded profiles (bastard file → finer file)<br>
+                  ● Identified and managed hand-fit variation: slight lip in some orientations due to realistic limits of hand-finishing accuracy<br><br>
+
+                  <b>Tools &amp; Equipment</b><br><br>
+                  ● Drill press, vertical mill<br>
+                  ● Hand tools: files (coarse to fine)<br><br>
+
+                  <b>Quality &amp; Verification</b><br><br>
+                  ● Primary functional check: bolts could be installed from either side and fully thread in (alignment + correct spec)<br>
+                  ● Cosmetic grading is acknowledged as somewhat subjective; function prioritized and verified<br>
+                </p>
+              </div>
+
+            </div>
+
+              <div class="detail-inner" id="detail-robot-flange">
+              <h2 class="detail-title">Robot End-of-Arm Flange</h2>
+
+              <div class="detail-body">
+                <p>
+                  <b>Processes:</b> Turning, boring, bolt-hole layout on mill DRO, reaming, custom drawing creation<br><br>
+                  <b>Material:</b> Aluminum puck/bar stock cutouts<br><br>
+                  Created a UR5 end-of-arm flange based on OEM documentation, produced a custom AutoCAD drawing, machined the flange on the lathe and mill, and verified precision fit on a real robot. Included a machined flat that improved edge-finding and later benefited vision line-of-sight in a real UR5 + Robotiq vision setup.<br><br>
+
+                  <b>Technical Scope:</b><br><br>
+                  ● Interpret OEM mounting documentation and convert into a manufacturable drawing<br>
+                  ● Lathe operations for facing, OD/ID turning, boring, and profile features<br>
+                  ● Mill operations for bolt-hole circle + alignment pin hole (drill + ream)<br>
+                  ● Add a functional flat for setup accuracy and downstream integration<br><br>
+
+                  <b>Work Performed</b><br><br>
+                  ● Completed round features on the lathe: bore, lips, facing, profiles<br>
+                  ● Machined a flat for easier edge-finding and repeatable referencing<br>
+                  ● Cut bolt-hole circle using mill DRO<br>
+                  ● Drilled and reamed the alignment hole on the mill<br>
+                  ● Verified fit on UR5 with a close, smooth fit with no play<br><br>
+
+                  <b>Tools &amp; Equipment</b><br><br>
+                  ● Lathe, vertical mill (DRO)<br>
+                  ● Micrometre for verifying outside dimensions<br>
+                  ● OEM source: Universal Robots mounting documentation + AutoCAD drawing creation<br><br>
+
+                  <b>Quality &amp; Verification</b><br><br>
+                  ● Measured critical dimensions with micrometre prior to installation<br>
+                  ● Test-fit verified close tolerance and stable mounting on robot<br>
+                </p>
+              </div>
+
+            </div>
+
+          </section>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BIO OVERLAY -->
+  <div class="overlay overlay-bio">
+    <div class="overlay-content">
+      <button class="back-button" type="button">← Back to main</button>
+
+      <div class="bio-shell">
+        <div class="bio-grid">
+          <section class="bio-card bio-biography">
+            <h2>Biography</h2>
+            <div class="bio-body">
+              <p>My name is Nicolas Dumbrava and my biography will go here.</p>
+            </div>
+          </section>
+
+          <section class="bio-card">
+            <h2>Certifications</h2>
+            <div class="bio-body">
+              <ul class="bio-list">
+                <li>Certification 1</li>
+                <li>Certification 2</li>
+                <li>Certification 3</li>
+                <li>Certification 4</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="bio-card">
+            <h2>Education</h2>
+            <div class="bio-body">
+              <ul class="bio-list">
+                <li>Diploma: Etc...</li>
+                <li>Etc...</li>
+                <li>Continued Learning: Etc...</li>
+              </ul>
+            </div>
+          </section>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const container = document.querySelector('.container');
+  const leftSide = document.querySelector('.side.left');
+  const rightSide = document.querySelector('.side.right');
+  const backButtons = document.querySelectorAll('.back-button');
+
+  const projectCards = document.querySelectorAll('.project-card');
+  const detailPanels = document.querySelectorAll('.detail-inner');
+
+  const projectPhotoImg = document.getElementById('projectPhotoImg');
+  const projectPhotoTitle = document.getElementById('projectPhotoTitle');
+  const projectPhotoCaption = document.getElementById('projectPhotoCaption');
+
+  const projectsOverlay = document.querySelector('.overlay-projects');
+  const bioOverlay = document.querySelector('.overlay-bio');
+
+  const OPEN_LOCK_MS  = 400;
+  const CLOSE_LOCK_MS = 1150;
+
+  let lockTimer = null;
+
+  // Cancel input at capture phase while transitioning (extra-robust)
+  const CAPTURE_EVENTS = [
+    "pointerdown","pointerup","click","dblclick",
+    "mousedown","mouseup","touchstart","touchend",
+    "wheel","contextmenu"
+  ];
+  function captureBlocker(e){
+    if (!container.classList.contains('transitioning')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+  }
+  function enableCaptureBlock(){
+    CAPTURE_EVENTS.forEach(ev => window.addEventListener(ev, captureBlocker, true));
+  }
+  function disableCaptureBlock(){
+    CAPTURE_EVENTS.forEach(ev => window.removeEventListener(ev, captureBlocker, true));
+  }
+
+  function lockUI(ms){
+    container.classList.add('transitioning');
+    enableCaptureBlock();
+    clearTimeout(lockTimer);
+    lockTimer = setTimeout(unlockUI, ms);
+  }
+
+  function unlockUI(){
+    clearTimeout(lockTimer);
+    lockTimer = null;
+    container.classList.remove('transitioning');
+    disableCaptureBlock();
+  }
+
+  function isLocked(){
+    return container.classList.contains('transitioning') || container.classList.contains('closing');
+  }
+
+  function openProjects() {
+    if (isLocked()) return;
+    lockUI(OPEN_LOCK_MS);
+
+    container.classList.remove('show-bio', 'closing', 'closing-bio', 'closing-projects', 'returning-bio', 'returning-projects');
+
+    container.classList.remove('show-projects');
+    void container.offsetWidth;
+    container.classList.add('show-projects');
+  }
+
+  function openBio() {
+    if (isLocked()) return;
+    lockUI(OPEN_LOCK_MS);
+
+    container.classList.remove('show-projects', 'closing', 'closing-bio', 'closing-projects', 'returning-bio', 'returning-projects');
+
+    container.classList.remove('show-bio');
+    void container.offsetWidth;
+    container.classList.add('show-bio');
+  }
+
+  function closeOverlay() {
+    if (isLocked()) return;
+
+    const closingProjects = container.classList.contains('show-projects');
+    const closingBio = container.classList.contains('show-bio');
+    if (!closingProjects && !closingBio) return;
+
+    lockUI(CLOSE_LOCK_MS);
+    container.classList.add('closing');
+
+    if (closingProjects) {
+      container.classList.add('closing-projects');
+
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+
+        // Remove state → triggers the 0.6s left-side return transition
+        container.classList.remove('show-projects', 'closing', 'closing-projects');
+
+        // ✅ apply smooth return fix for the duration of the side return
+        container.classList.add('returning-projects');
+        setTimeout(() => container.classList.remove('returning-projects'), 650);
+      };
+
+      projectsOverlay.addEventListener('animationend', (e) => {
+        if (e.animationName === 'overlayFadeOut') finish();
+      }, { once: true });
+
+      // fallback
+      setTimeout(finish, 520);
+
+    } else {
+      container.classList.add('closing-bio');
+
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+
+        container.classList.remove('show-bio', 'closing', 'closing-bio');
+
+        container.classList.add('returning-bio');
+        setTimeout(() => container.classList.remove('returning-bio'), 650);
+      };
+
+      bioOverlay.addEventListener('animationend', (e) => {
+        if (e.animationName === 'overlayFadeOut') finish();
+      }, { once: true });
+
+      setTimeout(finish, 520);
+    }
+  }
+
+  leftSide.addEventListener('click', openProjects);
+  rightSide.addEventListener('click', openBio);
+  backButtons.forEach(btn => btn.addEventListener('click', closeOverlay));
+
+  function updateProjectPhotoFromCard(card) {
+    const url = card.dataset.photo || "https://picsum.photos/600/400?random=1";
+    const alt = card.dataset.photoalt || "";
+    const title = card.dataset.phototitle || card.querySelector("h2")?.textContent || "Project";
+    const caption = card.dataset.photocaption || "";
+
+    projectPhotoTitle.textContent = title;
+    projectPhotoCaption.textContent = caption;
+
+    projectPhotoImg.style.opacity = "0";
+
+    const pre = new Image();
+    pre.onload = () => {
+      projectPhotoImg.src = url;
+      projectPhotoImg.alt = alt;
+      requestAnimationFrame(() => { projectPhotoImg.style.opacity = "1"; });
+    };
+    pre.onerror = () => {
+      projectPhotoImg.removeAttribute("src");
+      projectPhotoImg.alt = "";
+      projectPhotoCaption.textContent = "Image not found.";
+      requestAnimationFrame(() => { projectPhotoImg.style.opacity = "1"; });
+    };
+    pre.src = url;
+  }
+
+  projectCards.forEach(card => {
+    card.addEventListener('click', () => {
+      if (container.classList.contains('transitioning')) return;
+
+      const targetId = card.getAttribute('data-target');
+
+      projectCards.forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+
+      // ✅ FIX 2: switch panels + reset scroll to top on the newly active detail-body
+      detailPanels.forEach(panel => {
+        const isActive = panel.id === targetId;
+        panel.classList.toggle('active', isActive);
+
+        if (isActive) {
+          const body = panel.querySelector('.detail-body');
+          if (body) body.scrollTop = 0;
+        }
+      });
+
+      updateProjectPhotoFromCard(card);
+    });
+  });
+
+  const initial = document.querySelector('.project-card.selected') || projectCards[0];
+  if (initial) updateProjectPhotoFromCard(initial);
+</script>
+
+</body>
+</html>
