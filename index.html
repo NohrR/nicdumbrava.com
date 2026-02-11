@@ -1,773 +1,1888 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>NovaSoft — Modern Software for Modern Teams</title>
+<meta charset="UTF-8">
+<title>Diagonal Split Portfolio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    :root{
-      --bg: #ffffff;
-      --panel: rgba(255,255,255,0.78);
-      --panel2: rgba(248,248,248,0.82);
-      --text: #0f172a;
-      --muted: #475569;
-      --border: rgba(15, 23, 42, 0.10);
-      --shadow: 0 18px 60px rgba(2, 6, 23, 0.12);
-      --radius: 18px;
-      --max: 1120px;
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    font-size: clamp(14px, 0.8vw + 0.5rem, 18px); /* Revert to original base font size */
+  }
+
+  /* Moderate scaling for common Full HD to QHD resolutions */
+  @media (min-width: 1920px) and (max-width: 2500px) {
+    html {
+      font-size: clamp(16px, 0.9vw + 0.6rem, 20px);
     }
-
-    *{ box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
-    body{
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      color: var(--text);
-      background: linear-gradient(180deg, #ffffff 0%, #f6f7fb 45%, #ffffff 100%);
-      overflow-x: hidden;
+    .projects-layout, .bio-grid {
+      max-width: 1100px;
+      max-height: 750px;
     }
+  }
 
-    /* Three.js background */
-    #bg3d{
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      display: block;
+  /* Aggressive scaling for truly large/4K resolutions */
+  @media (min-width: 2560px) {
+    html {
+      font-size: clamp(20px, 1vw + 0.8rem, 28px);
     }
-
-    /* Soft overlay to keep text readable */
-    .backdrop-wash{
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
-      background:
-        radial-gradient(1200px 800px at 20% 15%, rgba(255,255,255,0.65), rgba(255,255,255,0) 60%),
-        radial-gradient(1000px 700px at 70% 10%, rgba(255,255,255,0.60), rgba(255,255,255,0) 55%),
-        linear-gradient(180deg, rgba(255,255,255,0.15), rgba(255,255,255,0.35));
+    .projects-layout, .bio-grid {
+      max-width: min(1500px, 60vw);
+      max-height: min(1200px, 80vh);
     }
+  }
 
-    /* Page content */
-    .page{
-      position: relative;
-      z-index: 2;
-      min-height: 100vh;
+
+
+  body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: grey;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* =========================
+     TRANSITION LOCK
+     ========================= */
+  .interaction-blocker{
+    position: fixed;
+    inset: 0;
+    display: none;
+    z-index: 9998;           /* below title (9999), above everything else */
+    background: transparent;
+    cursor: default;         /* ✅ no loading spinner */
+    user-select: none;
+  }
+
+  .container.transitioning *{
+    pointer-events: none !important;
+  }
+  .container.transitioning .interaction-blocker{
+    display: block;
+    pointer-events: auto !important;
+  }
+
+  /* Prevent hover visuals during transitions */
+  .container:not(.show-projects):not(.show-bio):not(.transitioning) .side:hover {
+    filter: brightness(0.6);
+    transform: scale(1.03);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.5);
+    z-index: 2;
+  }
+
+  .side {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    transition:
+      transform 0.6s ease,
+      filter 0.4s ease,
+      box-shadow 0.4s ease,
+      clip-path 0.6s ease,
+      opacity 0.4s ease;
+    filter: brightness(0.9);
+    will-change: transform, clip-path, filter, opacity;
+  }
+
+  .top-left-image {
+    position: fixed;
+    top: clamp(0px, 1.5vh, 0px);
+    left: clamp(0px, 1.5vw, 0px);
+    width: clamp(60px, 8vw, 140px);
+    height: auto;
+    z-index: 10; /* Above everything */
+    pointer-events: none; /* So it doesn't block interaction */
+    transition: opacity 260ms ease, transform 260ms ease;
+  }
+
+  .bottom-right-image {
+    position: fixed;
+    bottom: clamp(0px, 1.5vh, 0px);
+    right: clamp(0px, 1.5vw, 0px);
+    width: clamp(60px, 8vw, 140px);
+    height: auto;
+    z-index: 10; /* Above everything */
+    pointer-events: none; /* So it doesn't block interaction */
+    transition: opacity 260ms ease, transform 260ms ease;
+  }
+
+  /* ✅ Hide corner images when overlays are open/closing */
+  .container.show-projects .top-left-image,
+  .container.show-projects .bottom-right-image,
+  .container.show-bio .top-left-image,
+  .container.show-bio .bottom-right-image,
+  .container.closing .top-left-image,
+  .container.closing .bottom-right-image{
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  .side.left {
+    background-image: url("https://res.cloudinary.com/dhbpbyrc9/image/upload/AdobeStock_507067955_1_tvukti.jpg");
+    clip-path: polygon(0 0, 60% 0, 40% 100%, 0 100%);
+  }
+
+  .side.right {
+    background-image: url("https://res.cloudinary.com/dhbpbyrc9/image/upload/AdobeStock_1788263600_1_o4jkyu.jpg");
+    clip-path: polygon(60% 0, 100% 0, 100% 100%, 40% 100%);
+  }
+
+  /* ✅ ALWAYS ABOVE EVERYTHING */
+  .center-title {
+    position: fixed;
+    top: 50%;
+    left: 52.7%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(2.5rem, 4vw + 1rem, 5rem); /* Responsive font size */
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 0.25rem 1.25rem rgba(0,0,0,0.7); /* Use rem for shadow */
+    z-index: 9999;
+    pointer-events: none;
+    transition: all 0.6s ease;
+    white-space: nowrap;
+  }
+
+  /* =========================
+     ✅ CORNER TRAPEZOID LABELS (UPDATED)
+     ========================= */
+  .corner-tag{
+    position: fixed;
+    z-index: 9996; /* above sides, below title/blocker */
+    background: rgba(15,23,42,0.95);
+    color: #fff;
+    font-weight: 900;
+    letter-spacing: 0.19em;
+    text-transform: uppercase;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    user-select: none;
+    border-radius: 0; /* no rounded edges */
+    box-shadow: 0 1.125rem 2.8125rem rgba(0,0,0,0.35); /* Converted from 0 18px 45px */
+  }
+
+  .corner-tag.top-left{
+    top: 0;
+    left: 0;
+    width: 35rem; /* Converted from 560px */
+    height: 4.875rem; /* Converted from 78px */
+    clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
+  }
+
+  .corner-tag.bottom-right{
+    right: 0;
+    bottom: 0;
+    width: 35rem; /* Converted from 560px */
+    height: 4.875rem; /* Converted from 78px */
+    clip-path: polygon(6% 0, 100% 0, 100% 100%, 0 100%);
+  }
+
+  .corner-tag span{
+    font-size: 1.3rem;
+    padding: 0 1.125rem; /* Converted from 0 18px */
+    line-height: 1.1;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 45rem){ /* Converted from 720px */
+    .corner-tag.top-left{ width: 15rem; height: 4.125rem; } /* Converted from 240px, 66px */
+    .corner-tag.bottom-right{ width: 15rem; height: 4.125rem; } /* Converted from 240px, 66px */
+    .corner-tag span{ font-size: 0.92rem; }
+  }
+
+  @media (max-width: 30rem){ /* Converted from 480px */
+    .corner-tag.top-left{ width: 12.5rem; height: 3.75rem; } /* Converted from 200px, 60px */
+    .corner-tag.bottom-right{ width: 18.75rem; height: 3.75rem; } /* Converted from 300px, 60px */
+    .corner-tag span{ font-size: 0.82rem; letter-spacing: 0.06em; }
+  }
+
+  /* Hide corner tags when overlays are open/closing */
+  .container.show-projects .corner-tag,
+  .container.show-bio .corner-tag,
+  .container.closing .corner-tag{
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+
+  .side-label {
+    position: absolute;
+    bottom: 10%;
+    color: rgb(9, 255, 255);
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-shadow: 0 0.125rem 0.5rem rgba(0,0,0,0.85); /* Converted from 0 2px 8px */
+  }
+  .side.left .side-label  { left: 15%; }
+  .side.right .side-label { right: 20%; text-align: right; }
+
+  .container.show-projects .side,
+  .container.show-bio .side {
+    filter: blur(3px) brightness(0.4);
+  }
+
+  .container.show-projects .side.left {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    transform: scale(1.08) translateX(-2%);
+    z-index: 1;
+  }
+  .container.show-projects .side.right {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .container.show-bio .side.right {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    transform: scale(1.08) translateX(2%);
+    z-index: 1;
+  }
+  .container.show-bio .side.left {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Title moves to top when any overlay is open */
+  .container.show-bio .center-title,
+  .container.show-projects .center-title {
+    top: 1.5rem; /* Converted from 24px */
+    left: 50%;
+    transform: translate(-50%, 0);
+    font-size: 2.6rem;
+    text-align: center;
+  }
+
+  /* ==========================================================
+     ✅ SMOOTH RETURN-TO-MENU FIX (prevents weird overlap/fade)
+     ========================================================== */
+
+  /* When leaving PROJECTS: ensure right side snaps back instantly,
+     and keep left visually on top while it morphs back. */
+  .container.returning-projects .side.left { z-index: 2; }
+  .container.returning-projects .side.right { z-index: 1; }
+
+  .container.returning-projects .side.right{
+    opacity: 1 !important; /* snap back; no fade-from-0 while left is morphing */
+    transition: transform 0.6s ease, filter 0.4s ease, box-shadow 0.4s ease, clip-path 0.6s ease !important;
+  }
+
+  /* When leaving BIO: same idea, but for the opposite side. */
+  .container.returning-bio .side.right { z-index: 2; }
+  .container.returning-bio .side.left  { z-index: 1; }
+
+  .container.returning-bio .side.left{
+    opacity: 1 !important;
+    transition: transform 0.6s ease, filter 0.4s ease, box-shadow 0.4s ease, clip-path 0.6s ease !important;
+  }
+
+  /* ---------------- Overlays ---------------- */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 6.25rem 8% 3rem; /* Converted from 100px 8% 48px */
+    background: radial-gradient(circle at top, rgba(15,23,42,0.85), rgba(15,23,42,0.95));
+    z-index: 10;
+    color: #f9fafb;
+    pointer-events: none;
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+
+  .overlay-content {
+    width: 100%;
+    max-width: 68.75rem; /* Converted from 1100px */
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem; /* Converted from 18px */
+  }
+
+  .back-button {
+    align-self: flex-start;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(15,23,42,0.7);
+    color: #e5e7eb;
+    font-size: 0.9rem;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: background 0.2s ease, transform 0.1s ease;
+  }
+  .back-button:hover  { background: rgba(148,163,184,0.4); transform: translateY(-1px); }
+  .back-button:active { transform: translateY(1px); }
+
+  /* ---------------- Animations ---------------- */
+  @keyframes overlayFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes overlayFadeOut { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes panelFadeUp    { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes panelFadeDown  { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(12px); } }
+
+  /* ---------------- PROJECTS OVERLAY ---------------- */
+  .overlay-projects { transform: translateX(-40px); }
+
+  .container.show-projects:not(.closing) .overlay-projects {
+    display: flex;
+    pointer-events: auto;
+    transform: translateX(0);
+    animation: overlayFadeIn 650ms ease both;
+  }
+
+  .container.closing-projects .overlay-projects {
+    display: flex;
+    pointer-events: none;
+    transform: translateX(0);
+    animation: overlayFadeOut 450ms ease both;
+  }
+
+  .projects-shell{
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  /* ===========================
+    CUSTOM OVAL SCROLLBAR
+    =========================== */
+
+  /* Firefox */
+  .detail-body,
+  .bio-body{
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148,163,184,0.65) transparent;
+  }
+
+  /* WebKit (Chrome, Edge, Safari) */
+  .detail-body::-webkit-scrollbar,
+  .bio-body::-webkit-scrollbar{
+    width: 10px;
+  }
+
+  .detail-body::-webkit-scrollbar-track,
+  .bio-body::-webkit-scrollbar-track{
+    background: transparent;
+  }
+
+  .detail-body::-webkit-scrollbar-thumb,
+  .bio-body::-webkit-scrollbar-thumb{
+    background: linear-gradient(
+      180deg,
+      rgba(148,163,184,0.85),
+      rgba(226,232,240,0.95)
+    );
+    border-radius: 999px;          /* oval shape */
+    border: 3px solid transparent; /* creates padding around thumb */
+    background-clip: content-box;
+  }
+
+  .detail-body::-webkit-scrollbar-thumb:hover,
+  .bio-body::-webkit-scrollbar-thumb:hover{
+    background: linear-gradient(
+      180deg,
+      rgba(165,180,252,1),
+      rgba(56,189,248,1)
+    );
+  }
+
+  .detail-body::-webkit-scrollbar-thumb:active,
+  .bio-body::-webkit-scrollbar-thumb:active{
+    background: linear-gradient(
+      180deg,
+      rgba(99,102,241,1),
+      rgba(37,99,235,1)
+    );
+  }
+
+  .projects-layout{
+    width: min(1000px, 100%);
+    height: min(72vh, 650px);
+    background: rgba(15,23,42,0.98);
+    border-radius: 26px;
+    border: 1px solid rgba(148,163,184,0.7);
+    box-shadow: 0 24px 60px rgba(15,23,42,0.9);
+
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 18px;
+
+    padding: 18px;
+    overflow: hidden;
+    will-change: opacity, transform;
+  }
+
+
+
+  .container.show-projects:not(.closing-projects) .projects-layout{
+    animation: panelFadeUp 1100ms ease both;
+    animation-delay: 180ms;
+  }
+  .container.closing-projects .projects-layout{
+    animation: panelFadeDown 420ms ease both;
+  }
+
+  .projects-sidebar{
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .project-photo{
+    background: rgba(15,23,42,0.85);
+    border-radius: 18px;
+    border: 1px dashed rgba(148,163,184,0.8);
+    padding: 10px;
+  }
+
+  .photo-frame{
+    position: relative;
+    height: 120px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(15,23,42,0.9);
+  }
+
+  #projectPhotoImg{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 1;
+    transition: opacity 180ms ease;
+  }
+
+  .photo-caption{
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: #cbd5f5;
+    line-height: 1.3;
+  }
+  .photo-caption span{ opacity: 0.9; font-style: italic; }
+
+  .projects-sidebar-list{
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .section-title-sm{
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    text-align: center;
+  }
+
+  .section-subtitle-sm{
+    font-size: 0.8rem;
+    color: #cbd5f5;
+    line-height: 1.35;
+  }
+
+  .projects-list{
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 10px;
+    padding-left: 2px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .projects-list::-webkit-scrollbar{ width: 0; height: 0; display: none; }
+
+  /* ✅ NEW: category label inside projects list (doesn't affect scrolling setup) */
+  .projects-category{
+    margin: 8px 0 2px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(148,163,184,0.28);
+    background: rgba(15,23,42,0.55);
+    color: #a5b4fc;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-align: center;
+    user-select: none;
+  }
+
+  .project-card{
+    width: 100%;
+    background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,64,175,0.9));
+    border-radius: 16px;
+    border: 1px solid rgba(148,163,184,0.6);
+    padding: 10px 14px 10px;
+    cursor: pointer;
+    box-shadow: 0 10px 28px rgba(15,23,42,0.8);
+    transition: box-shadow 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+  }
+
+  .project-card:hover{
+    box-shadow: 0 18px 40px rgba(15,23,42,0.9);
+    background: linear-gradient(135deg, rgba(30,64,175,0.96), rgba(56,189,248,0.9));
+    border-color: rgba(226,232,240,0.9);
+  }
+
+  .project-card.selected{
+    border-color: #e5e7eb;
+    box-shadow: 0 22px 55px rgba(15,23,42,1);
+  }
+
+  .project-summary{
+    height: 2.6em;
+    overflow: hidden;
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: #e5e7eb;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .project-card:hover .project-summary{ opacity: 1; transform: translateY(0); }
+
+  /* ===========================
+     ✅ SCROLLABLE DETAIL PANEL
+     =========================== */
+
+  .project-detail-panel{
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* keep rounded corners clipped; scrolling happens inside */
+    background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
+    border-radius: 20px;
+    border: 1px solid rgba(148,163,184,0.7);
+    padding: 16px 18px;
+  }
+
+  .detail-inner{
+    display: none;
+    height: 100%;
+    min-height: 0;
+  }
+  .detail-inner.active{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .detail-body{
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding-right: 6px;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: #e5e7eb;
+    margin-top: 10px;
+  }
+
+  .detail-title{
+    text-align: center;
+  }
+
+  /* ===========================
+     ✅ 3 rounded images in each detail-body
+     =========================== */
+  .detail-gallery{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 14px;
+    padding-bottom: 4px;
+  }
+  .detail-gallery img{
+    width: 100%;
+    height: clamp(140px, 12vh, 300px); /* Increased max height */
+    object-fit: cover;
+    border-radius: 16px;
+    border: 1px solid rgba(148,163,184,0.55);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+    cursor: zoom-in;
+    transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
+  }
+  .detail-gallery img:hover{
+    transform: translateY(-2px) scale(1.02);
+    filter: brightness(1.05);
+    box-shadow: 0 16px 34px rgba(0,0,0,0.45);
+  }
+
+  @media (max-width: 1000px){
+    .center-title{ font-size: 3.4rem; }
+    .projects-layout { grid-template-columns: 1fr; height: min(78vh, 760px); }
+  }
+
+  @media (max-width: 640px){
+    .detail-gallery{ grid-template-columns: 1fr; }
+    .detail-gallery img{ height: 180px; }
+  }
+
+  /* ===========================
+     ✅ Lightbox (scrollable + extra images under main preview)
+     =========================== */
+  .lightbox{
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    background: rgba(2,6,23,0.86);
+    backdrop-filter: blur(8px);
+    z-index: 10050; /* above everything */
+  }
+  .lightbox.open{ display: flex; }
+
+  .lightbox-panel{
+    position: relative;
+    width: min(1100px, 92vw);
+    height: min(80vh, 760px);
+    border-radius: 22px;
+    overflow: auto;
+    border: 1px solid rgba(148,163,184,0.55);
+    box-shadow: 0 30px 90px rgba(0,0,0,0.65);
+    background: rgba(15,23,42,0.95);
+    transform: translateY(10px) scale(0.98);
+    opacity: 0;
+    transition: transform 220ms ease, opacity 220ms ease;
+    padding: 18px;
+  }
+  .lightbox.open .lightbox-panel{
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  .lightbox-img{
+    width: 100%;
+    max-height: 64vh;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    border-radius: 16px;
+    background: radial-gradient(circle at top, rgba(15,23,42,0.45), rgba(2,6,23,0.85));
+    border: 1px solid rgba(148,163,184,0.35);
+  }
+
+  .lightbox-extras{
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(148,163,184,0.25);
+  }
+  .lightbox-extras.open{ display: block; }
+
+  .lightbox-extras-title{
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #cbd5f5;
+    opacity: 0.95;
+  }
+
+  .lightbox-extras-grid{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .lightbox-extras-grid img{
+    width: 100%;
+    height: clamp(150px, 14vh, 320px); /* Increased max height */
+    object-fit: cover;
+    border-radius: 16px;
+    border: 1px solid rgba(148,163,184,0.55);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+    cursor: zoom-in;
+    transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
+  }
+  .lightbox-extras-grid img:hover{
+    transform: translateY(-2px) scale(1.02);
+    filter: brightness(1.05);
+    box-shadow: 0 16px 34px rgba(0,0,0,0.45);
+  }
+
+  /* ✅ 4-up layout when PLC 1 Final image #1 is clicked */
+  .lightbox-extras-grid.cols-4{
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  @media (max-width: 900px){
+    .lightbox-extras-grid.cols-4{
+      grid-template-columns: repeat(2, 1fr);
     }
+  }
 
-    header{
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      backdrop-filter: blur(14px);
-      background: rgba(255,255,255,0.6);
-      border-bottom: 1px solid var(--border);
+  @media (max-width: 640px){
+    .lightbox-img{ max-height: 52vh; }
+    .lightbox-extras-grid{ grid-template-columns: 1fr; }
+    .lightbox-extras-grid img{ height: 190px; }
+  }
+
+  .lightbox-close{
+    position: sticky;
+    top: 12px;
+    margin-left: auto;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.22);
+    background: rgba(15,23,42,0.7);
+    color: #e5e7eb;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    backdrop-filter: blur(8px);
+    transition: transform 120ms ease, background 160ms ease, border-color 160ms ease;
+    z-index: 2;
+  }
+  .lightbox-close:hover{
+    background: rgba(148,163,184,0.35);
+    border-color: rgba(226,232,240,0.7);
+    transform: scale(1.05);
+  }
+  .lightbox-close:active{ transform: scale(0.98); }
+
+  /* ---------------- BIO OVERLAY ---------------- */
+  .overlay-bio { transform: translateX(40px); }
+
+  .container.show-bio:not(.closing) .overlay-bio {
+    display: flex;
+    pointer-events: auto;
+    transform: translateX(0);
+    animation: overlayFadeIn 650ms ease both;
+  }
+
+  .container.closing-bio .overlay-bio {
+    display: flex;
+    pointer-events: none;
+    transform: translateX(0);
+    animation: overlayFadeOut 450ms ease both;
+  }
+
+  .bio-shell{
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  .bio-grid{
+    width: min(1000px, 100%);
+    height: min(72vh, 650px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1.1fr 1fr;
+    gap: 18px;
+    padding: 18px;
+    border-radius: 26px;
+    border: 1px solid rgba(148,163,184,0.7);
+    background: rgba(15,23,42,0.98);
+    box-shadow: 0 24px 60px rgba(15,23,42,0.9);
+    overflow: hidden;
+    will-change: opacity, transform;
+  }
+
+  .container.show-bio:not(.closing-bio) .bio-grid{
+    animation: panelFadeUp 1100ms ease both;
+    animation-delay: 180ms;
+  }
+  .container.closing-bio .bio-grid{
+    animation: panelFadeDown 420ms ease both;
+  }
+
+  .bio-card{
+    border-radius: 22px;
+    border: 1px solid rgba(148,163,184,0.55);
+    background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
+    box-shadow: 0 14px 40px rgba(15,23,42,0.75);
+    padding: 18px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .bio-card.bio-biography{ grid-column: 1 / -1; }
+
+  .bio-card h2{
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: #a5b4fc;
+    margin-bottom: 10px;
+    flex: 0 0 auto;
+  }
+
+  .bio-body{
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding-right: 6px;
+    color: #e5e7eb;
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  .bio-list{ margin: 0; padding-left: 18px; }
+  .bio-list li{ margin-bottom: 6px; }
+
+  @media (max-width: 900px){
+    .bio-grid{
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
+      height: min(80vh, 760px);
     }
+    .bio-card.bio-biography{ grid-column: auto; }
+  }
 
-    .nav{
-      max-width: var(--max);
-      margin: 0 auto;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
+  /* ==========================================================
+     ✅ Bottom Center Quick Links Pill
+     ========================================================== */
+  .quick-links{
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 9997;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    padding: 10px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.55);
+    background: rgba(15,23,42,0.78);
+    box-shadow: 0 18px 45px rgba(0,0,0,0.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .quick-btn{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.22);
+    background: rgba(15,23,42,0.75);
+    color: #e5e7eb;
+    font-weight: 650;
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    text-decoration: none;
+    user-select: none;
+    transition: transform 120ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  }
+
+  .quick-btn:hover{
+    background: rgba(148,163,184,0.35);
+    border-color: rgba(226,232,240,0.75);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.35);
+  }
+  .quick-btn:active{ transform: translateY(1px); }
+
+  .quick-btn svg{
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+  }
+
+  @media (max-width: 520px){
+    .quick-links{
+      width: calc(100vw - 22px);
       justify-content: space-between;
-      gap: 14px;
+      gap: 8px;
+      padding: 10px;
     }
-
-    .brand{
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-    .logo{
-      width: 34px;
-      height: 34px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: linear-gradient(135deg, #ffffff, #f1f3f9);
-      box-shadow: 0 8px 20px rgba(2,6,23,0.08);
-      position: relative;
-      overflow: hidden;
-    }
-    .logo::before{
-      content:"";
-      position:absolute;
-      inset:-40%;
-      background: conic-gradient(from 180deg, rgba(2,6,23,0.0), rgba(2,6,23,0.18), rgba(2,6,23,0.0));
-      transform: rotate(10deg);
-    }
-
-    .links{
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-    .links a{
-      text-decoration: none;
-      color: var(--muted);
-      font-weight: 600;
-      font-size: 14px;
+    .quick-btn{
+      flex: 1;
+      justify-content: center;
       padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid transparent;
-      transition: 180ms ease;
+      font-size: 0.92rem;
     }
-    .links a:hover{
-      color: var(--text);
-      border-color: var(--border);
-      background: rgba(255,255,255,0.75);
-    }
+  }
 
-    .btn{
-      text-decoration: none;
-      font-weight: 800;
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, #ffffff, #f6f7fb);
-      box-shadow: 0 10px 30px rgba(2,6,23,0.10);
-      transition: transform 180ms ease, box-shadow 180ms ease;
-      white-space: nowrap;
-    }
-    .btn:hover{
-      transform: translateY(-1px);
-      box-shadow: 0 14px 40px rgba(2,6,23,0.14);
-    }
-
-    .wrap{
-      max-width: var(--max);
-      margin: 0 auto;
-      padding: 0 18px;
-    }
-
-    .hero{
-      padding: clamp(56px, 8vh, 92px) 0 24px;
-      min-height: 95vh;
-      display: grid;
-      align-items: center;
-    }
-
-    .hero-grid{
-      display: grid;
-      grid-template-columns: 1.25fr 0.75fr;
-      gap: 18px;
-      align-items: start;
-    }
-
-    @media (max-width: 980px){
-      .hero-grid{ grid-template-columns: 1fr; }
-    }
-
-    .card{
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--panel);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
-    }
-
-    .hero-card{
-      padding: 26px;
-    }
-
-    .kicker{
-      display:inline-flex;
-      align-items:center;
-      gap: 8px;
-      font-weight: 800;
-      font-size: 13px;
-      color: #0f172a;
-      border: 1px solid var(--border);
-      padding: 7px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.8);
-      margin-bottom: 14px;
-    }
-    .dot{
-      width: 8px; height: 8px;
-      border-radius: 999px;
-      background: #0f172a;
-      opacity: 0.35;
-    }
-
-    h1{
-      font-size: clamp(34px, 4.2vw, 54px);
-      line-height: 1.02;
-      letter-spacing: -0.045em;
-      margin-bottom: 14px;
-    }
-
-    .lead{
-      font-size: clamp(15px, 1.35vw, 18px);
-      color: var(--muted);
-      line-height: 1.6;
-      margin-bottom: 18px;
-      max-width: 62ch;
-    }
-
-    .hero-actions{
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-      margin: 10px 0 18px;
-    }
-
-    .btn-primary{
-      border-color: rgba(15,23,42,0.16);
-      background: linear-gradient(180deg, #ffffff 0%, #eef1f9 100%);
-    }
-
-    .btn-ghost{
-      box-shadow: none;
-      background: rgba(255,255,255,0.55);
-    }
-
-    .hint{
-      margin-top: 14px;
-      font-size: 13px;
-      color: rgba(71,85,105,0.95);
-      display:flex;
-      align-items:center;
-      gap: 10px;
-    }
-    .hint kbd{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 12px;
-      padding: 5px 8px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.85);
-    }
-
-    .side-card{
-      padding: 18px;
-      background: var(--panel2);
-    }
-    .stat{
-      padding: 14px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.7);
-      margin-bottom: 12px;
-    }
-    .stat b{
-      display:block;
-      font-size: 22px;
-      letter-spacing: -0.02em;
-      margin-bottom: 4px;
-    }
-    .stat span{
-      color: var(--muted);
-      font-weight: 600;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    /* Scroll stage: controls how long the cube->3 cubes transition lasts */
-    .scroll-stage{
-      height: 150vh; /* longer stage = slower transition */
-    }
-
-    section{
-      padding: 54px 0;
-    }
-
-    .section-head{
-      display:flex;
-      align-items:flex-end;
-      justify-content: space-between;
-      gap: 14px;
-      margin-bottom: 16px;
-    }
-
-    h2{
-      font-size: clamp(22px, 2.2vw, 30px);
-      letter-spacing: -0.03em;
-    }
-    .sub{
-      color: var(--muted);
-      font-weight: 600;
-      max-width: 70ch;
-      line-height: 1.55;
-      font-size: 14px;
-    }
-
-    .grid3{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-    }
-    @media (max-width: 980px){
-      .grid3{ grid-template-columns: 1fr; }
-    }
-
-    .feature{
-      padding: 18px;
-    }
-    .feature h3{
-      font-size: 16px;
-      margin-bottom: 6px;
-      letter-spacing: -0.02em;
-    }
-    .feature p{
-      color: var(--muted);
-      line-height: 1.6;
-      font-weight: 600;
-      font-size: 14px;
-    }
-
-    .pricing{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 14px;
-      align-items: stretch;
-    }
-    @media (max-width: 980px){
-      .pricing{ grid-template-columns: 1fr; }
-    }
-
-    .plan{
-      padding: 18px;
-      display:flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .plan .tag{
-      display:inline-block;
-      font-weight: 800;
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.75);
-      width: fit-content;
-    }
-    .price{
-      font-size: 34px;
-      letter-spacing: -0.03em;
-      font-weight: 900;
-    }
-    .plan ul{
-      list-style: none;
-      display:flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 6px;
-      color: var(--muted);
-      font-weight: 650;
-      line-height: 1.35;
-      font-size: 14px;
-    }
-    .plan li{
-      display:flex;
-      gap: 10px;
-      align-items: flex-start;
-    }
-    .check{
-      width: 18px; height: 18px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.8);
-      display:grid;
-      place-items: center;
-      flex: 0 0 auto;
-      margin-top: 1px;
-      color: rgba(15,23,42,0.7);
-      font-weight: 900;
-      font-size: 12px;
-    }
-
-    footer{
-      padding: 34px 0 50px;
-      border-top: 1px solid var(--border);
-      background: rgba(255,255,255,0.55);
-      backdrop-filter: blur(10px);
-    }
-    .foot{
-      display:flex;
-      align-items:center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-      color: var(--muted);
-      font-weight: 650;
-      font-size: 13px;
-    }
-
-    /* Small screen nav tightening */
-    @media (max-width: 560px){
-      .links a{ padding: 8px 10px; }
-      .btn{ padding: 9px 12px; }
-    }
-  </style>
+  .container.show-projects .quick-links,
+  .container.show-bio .quick-links,
+  .container.closing .quick-links{
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(10px);
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+</style>
 </head>
+
 <body>
-  <canvas id="bg3d"></canvas>
-  <div class="backdrop-wash" aria-hidden="true"></div>
+<div class="container">
+  <div class="interaction-blocker" aria-hidden="true"></div>
 
-  <div class="page">
-    <header>
-      <div class="nav">
-        <div class="brand">
-          <div class="logo" aria-hidden="true"></div>
-          <span>NovaSoft</span>
-        </div>
-        <div class="links">
-          <a href="#features">Features</a>
-          <a href="#platform">Platform</a>
-          <a href="#pricing">Pricing</a>
-          <a class="btn btn-primary" href="#pricing">Get a demo</a>
-        </div>
-      </div>
-    </header>
+  <div class="center-title">NICOLAS DUMBRAVA</div>
 
-    <main>
-      <!-- HERO + scroll stage for the cube split animation -->
-      <div class="scroll-stage" id="scrollStage">
-        <div class="wrap hero" id="top">
-          <div class="hero-grid">
-            <div class="card hero-card">
-              <div class="kicker"><span class="dot"></span> Software that scales with your team</div>
-              <h1>Ship faster. Stay safer. Run smarter.</h1>
-              <p class="lead">
-                NovaSoft builds clean, reliable tools for product teams—deployment automation, analytics, and security
-                controls that don’t get in the way.
-              </p>
-              <div class="hero-actions">
-                <a class="btn btn-primary" href="#pricing">Start free trial</a>
-                <a class="btn btn-ghost" href="#features">See features</a>
-              </div>
-              <div class="hint">
-                <span>Scroll to interact with the background</span>
-                <kbd>Mouse wheel</kbd>
-                <span>or</span>
-                <kbd>Trackpad</kbd>
-              </div>
-            </div>
+  <!-- <div class="corner-tag top-left" aria-hidden="true"><span>PROJECTS</span></div>
+  <div class="corner-tag bottom-right" aria-hidden="true"><span>KNOWLEDGE &amp; EXPERIENCE</span></div> -->
 
-            <aside class="card side-card">
-              <div class="stat">
-                <b>99.95%</b>
-                <span>Target uptime with automatic rollbacks and health checks.</span>
-              </div>
-              <div class="stat">
-                <b>&lt; 2 min</b>
-                <span>Average deploy time from merge to production.</span>
-              </div>
-              <div class="stat" style="margin-bottom:0;">
-                <b>Zero noise</b>
-                <span>Actionable alerts only—no notification spam.</span>
-              </div>
-            </aside>
-          </div>
-        </div>
-      </div>
+  <div class="quick-links" aria-label="Quick links">
+    <a class="quick-btn" href="https://res.cloudinary.com/dhbpbyrc9/raw/upload/Resume_Nicolas_Dumbrava_2026_kzmrat.docx" download aria-label="Download Resume">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <path d="M7 10l5 5 5-5"/>
+        <path d="M12 15V3"/>
+      </svg>
+      <span>Resume</span>
+    </a>
 
-      <section id="features">
-        <div class="wrap">
-          <div class="section-head">
-            <div>
-              <h2>Features teams actually use</h2>
-              <p class="sub">Opinionated defaults, flexible configuration, and the right amount of automation.</p>
-            </div>
-          </div>
-
-          <div class="grid3">
-            <div class="card feature">
-              <h3>Deploy Pipelines</h3>
-              <p>Build, test, and release with guardrails—preview environments and instant rollback included.</p>
-            </div>
-            <div class="card feature">
-              <h3>Telemetry & Insights</h3>
-              <p>Find bottlenecks fast with traces, metrics, and dashboards designed for product engineers.</p>
-            </div>
-            <div class="card feature">
-              <h3>Access Controls</h3>
-              <p>Fine-grained permissions, audit logs, and policy enforcement across every workspace.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="platform">
-        <div class="wrap">
-          <div class="section-head">
-            <div>
-              <h2>Built for modern stacks</h2>
-              <p class="sub">Runs anywhere, integrates with everything, and stays out of the way until you need it.</p>
-            </div>
-          </div>
-
-          <div class="grid3">
-            <div class="card feature">
-              <h3>API-first</h3>
-              <p>Everything you can click is also an endpoint—scriptable, testable, and predictable.</p>
-            </div>
-            <div class="card feature">
-              <h3>Secure by default</h3>
-              <p>Encryption at rest, scoped tokens, and SSO support with clean, readable security controls.</p>
-            </div>
-            <div class="card feature">
-              <h3>Fast onboarding</h3>
-              <p>Bring your team over in a day, not a quarter—templates and migrations included.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="pricing">
-        <div class="wrap">
-          <div class="section-head">
-            <div>
-              <h2>Pricing</h2>
-              <p class="sub">Simple tiers. Upgrade when you feel real value—not because you hit arbitrary limits.</p>
-            </div>
-          </div>
-
-          <div class="pricing">
-            <div class="card plan">
-              <span class="tag">Starter</span>
-              <div class="price">$19<span style="font-size:14px;font-weight:800;color:var(--muted);">/mo</span></div>
-              <div class="sub">For solo builders and small prototypes.</div>
-              <ul>
-                <li><span class="check">✓</span><span>1 workspace</span></li>
-                <li><span class="check">✓</span><span>Basic deploy pipelines</span></li>
-                <li><span class="check">✓</span><span>Community support</span></li>
-              </ul>
-              <a class="btn btn-ghost" href="#top" style="margin-top:auto;">Try Starter</a>
-            </div>
-
-            <div class="card plan" style="transform: translateY(-2px); border-color: rgba(15,23,42,0.14);">
-              <span class="tag">Team</span>
-              <div class="price">$79<span style="font-size:14px;font-weight:800;color:var(--muted);">/mo</span></div>
-              <div class="sub">For teams shipping production software.</div>
-              <ul>
-                <li><span class="check">✓</span><span>Unlimited workspaces</span></li>
-                <li><span class="check">✓</span><span>Advanced telemetry dashboards</span></li>
-                <li><span class="check">✓</span><span>SSO + audit logs</span></li>
-              </ul>
-              <a class="btn btn-primary" href="#top" style="margin-top:auto;">Start Team Trial</a>
-            </div>
-
-            <div class="card plan">
-              <span class="tag">Enterprise</span>
-              <div class="price">Custom</div>
-              <div class="sub">For regulated environments and large orgs.</div>
-              <ul>
-                <li><span class="check">✓</span><span>Private deployments</span></li>
-                <li><span class="check">✓</span><span>Dedicated support + SLA</span></li>
-                <li><span class="check">✓</span><span>Custom policies and controls</span></li>
-              </ul>
-              <a class="btn btn-ghost" href="#top" style="margin-top:auto;">Book a Demo</a>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <div class="wrap foot">
-        <div><b>NovaSoft</b> — Software for modern teams.</div>
-        <div>© <span id="year"></span> NovaSoft Inc.</div>
-      </div>
-    </footer>
+    <a class="quick-btn" href="https://www.youtube.com/@NicolasDumbrava-e9r" target="_blank" rel="noopener noreferrer" aria-label="Open YouTube">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+        <path d="M23.498 6.186a2.997 2.997 0 0 0-2.111-2.12C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.387.566A2.997 2.997 0 0 0 .502 6.186 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .502 5.814 2.997 2.997 0 0 0 2.111 2.12C4.495 20.5 12 20.5 12 20.5s7.505 0 9.387-.566a2.997 2.997 0 0 0 2.111-2.12A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.502-5.814ZM9.75 15.5v-7l6.5 3.5-6.5 3.5Z"/>
+      </svg>
+      <span>YouTube</span>
+    </a>
   </div>
 
-  <!-- Three.js (module) -->
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.161.0/build/three.module.js"
-      }
+  <div class="side left"></div>
+  <div class="side right"></div>
+
+  <img 
+    src="https://res.cloudinary.com/dhbpbyrc9/image/upload/AdobeStock_507067955_1_1_x2p0zc.png"
+    style="width: 40vw; min-width: 330px;" 
+    alt="Top Left Graphic"
+    class="top-left-image"
+  />
+
+  <img 
+    src="https://res.cloudinary.com/dhbpbyrc9/image/upload/AdobeStock_507067955_1_2_abyj3r.png"
+    style="width: 40vw; min-width: 330px;" 
+    alt="Bottom Right Graphic"
+    class="bottom-right-image"
+  />
+
+  <!-- PROJECTS OVERLAY -->
+  <div class="overlay overlay-projects">
+    <div class="overlay-content">
+      <button class="back-button" type="button">← Back to main</button>
+
+      <div class="projects-shell">
+        <div class="projects-layout">
+
+          <aside class="projects-sidebar">
+            <div class="project-photo">
+              <div class="photo-frame">
+                <img id="projectPhotoImg" src="https://picsum.photos/600/400?random=1" alt="">
+              </div>
+
+              <p class="photo-caption">
+                <strong id="projectPhotoTitle">Select a project</strong><br>
+                <span id="projectPhotoCaption">Click a card to swap the image.</span>
+              </p>
+            </div>
+
+            <div class="projects-sidebar-list">
+              <div class="section-title-sm">Projects</div>
+              <p class="section-subtitle-sm">
+                Click on the various cards in this list to see what projects I've worked on.
+              </p>
+
+              <div class="projects-list">
+
+                <div class="projects-category">Electrical</div>
+
+                <article class="project-card"
+                  data-target="detail-skate-sharpener"
+                  data-photo="https://res.cloudinary.com/dhbpbyrc9/image/upload/Panel_wiring_iu6f30.jpg"
+                  data-photoalt="Tap handle project photo"
+                  data-phototitle="Skate Sharpener"
+                  data-photocaption="Designed and built a control system simulating an automatic skate sharpener">
+                  <header class="project-header">
+                    <div class="project-title-row">
+                      <h2>Skate Sharpener</h2><br>
+                      <span class="project-meta"><b>Electrical</b></span>
+                    </div>
+                    <div class="skill-tags">
+                      <span><b>Theme: </b>3 phase motor control with timed interlocking</span>
+                    </div>
+                  </header>
+                  <p class="project-summary">Designed and built a control system simulating an automatic skate sharpener</p>
+                </article>
+
+                <article class="project-card"
+                  data-target="detail-plc-final"
+                  data-photo="https://res.cloudinary.com/dhbpbyrc9/image/upload/final_setup_assembly_p0uxiv.jpg"
+                  data-photoalt="Tap handle project photo"
+                  data-phototitle="PLC Final"
+                  data-photocaption="Integrated a UR5 pick-and-place into a PLC-controlled conveyor + pressing system">
+                  <header class="project-header">
+                    <div class="project-title-row">
+                      <h2>PLC 1 Final</h2><br>
+                      <span class="project-meta"><b>Electrical</b></span>
+                    </div>
+                    <div class="skill-tags">
+                      <span><b>Theme: </b>Real system integration + commissioning + I/O mapping</span>
+                    </div>
+                  </header>
+                  <p class="project-summary">Integrated a UR5 pick-and-place into a PLC-controlled conveyor + pressing system</p>
+                </article>
+
+                <div class="projects-category">Manufacturing</div>
+
+                <article class="project-card selected"
+                  data-target="detail-milling-block"
+                  data-photo="https://res.cloudinary.com/dhbpbyrc9/image/upload/MILL_BLOCK_1_qjml1r.jpg"
+                  data-photoalt="CNC fixture project photo"
+                  data-phototitle="Milling Block"
+                  data-photocaption="A milling block machined from mild steel bar stock">
+                  <header class="project-header">
+                    <div class="project-title-row">
+                      <h2>Milling Block</h2><br>
+                      <span class="project-meta"><b>Manufacturing</b></span>
+                    </div>
+                    <div class="skill-tags">
+                      <span><b>Material:</b> Mild Steel</span>
+                    </div>
+                  </header>
+                  <p class="project-summary">A milling block machined from mild steel bar stock</p>
+                </article>
+
+                <article class="project-card"
+                  data-target="detail-drill-gauge"
+                  data-photo="https://res.cloudinary.com/dhbpbyrc9/image/upload/Drill_Gauge_1_ylhqq2.jpg"
+                  data-photoalt="Dashboard project screenshot"
+                  data-phototitle="Drill Gauge"
+                  data-photocaption="Accurately produced drill gauge with specific requirements">
+                  <header class="project-header">
+                    <div class="project-title-row">
+                      <h2>Drill Gauge</h2><br>
+                      <span class="project-meta"><b>Manufacturing</b></span>
+                    </div>
+                    <div class="skill-tags">
+                      <span><b>Material: </b> Mild Steel</span>
+                    </div>
+                  </header>
+                  <p class="project-summary">Accurately produced drill gauge with specific requirements</p>
+                </article>
+
+                <article class="project-card"
+                  data-target="detail-tap-handle"
+                  data-photo="https://res.cloudinary.com/dhbpbyrc9/image/upload/TAP_2_rd7on9.jpg"
+                  data-photoalt="Tap handle project photo"
+                  data-phototitle="Tap Handle"
+                  data-photocaption="Custom tap handle machined from bar stock">
+                  <header class="project-header">
+                    <div class="project-title-row">
+                      <h2>Tap Handle</h2><br>
+                      <span class="project-meta"><b>Manufacturing</b></span>
+                    </div>
+                    <div class="skill-tags">
+                      <span><b>Material: </b>Mild Steel (5/8&quot; bar stock handle components)</span>
+                    </div>
+                  </header>
+                  <p class="project-summary">Custom tap handle machined from bar stock.</p>
+                </article>
+
+                <article class="project-card"
+                  data-target="detail-tap-jaws"
+                  data-photo="https://res.cloudinary.com/dhbpbyrc9/image/upload/TAP_3_tzhdb0.jpg"
+                  data-photoalt="Tap handle jaws project photo"
+                  data-phototitle="Tap Jaws"
+                  data-photocaption="Manufactured tap handle jaws">
+                  <header class="project-header">
+                    <div class="project-title-row">
+                      <h2>Tap Handle Jaws</h2><br>
+                      <span class="project-meta"><b>Manufacturing</b></span>
+                    </div>
+                    <div class="skill-tags">
+                      <span><b>Material: </b>Mild steel (3/4&quot; square key stock)</span>
+                    </div>
+                  </header>
+                  <p class="project-summary">Manufactured tap handle jaws</p>
+                </article>
+
+                <article class="project-card"
+                  data-target="detail-robot-flange"
+                  data-photo="https://res.cloudinary.com/dhbpbyrc9/image/upload/EOAT_4_up3wer.jpg"
+                  data-photoalt="Tap handle project photo"
+                  data-phototitle="Robot End-of-Arm Flange"
+                  data-photocaption="Created a UR5 end-of-arm flange">
+                  <header class="project-header">
+                    <div class="project-title-row">
+                      <h2>Robot End-of-Arm Flange</h2><br>
+                      <span class="project-meta"><b>Manufacturing</b></span>
+                    </div>
+                    <div class="skill-tags">
+                      <span><b>Material: </b>Aluminum puck/bar stock cutouts</span>
+                    </div>
+                  </header>
+                  <p class="project-summary">Created a UR5 end-of-arm flange</p>
+                </article>
+
+              </div>
+            </div>
+          </aside>
+
+          <section class="project-detail-panel">
+
+              <div class="detail-inner active" id="detail-milling-block">
+              <h2 class="detail-title">Milling Block</h2>
+
+              <div class="detail-body">
+                <p>
+                <b>Processes:</b> Milling, facing, drilling/tapping, reaming, broaching, slotting, surface grinding<br><br>
+                <b>Material:</b> Mild steel<br><br>
+                Machined a milling block from mild steel bar stock, completing faces, profiles, holes, and slots to drawing-defined tolerances. Used in-process verification throughout manufacturing with a Go/No-Go gauge.<br><br>
+                <b>Technical Scope:</b><br><br>
+                ● Face and square stock close to final dimensions<br>
+                ● Drill and tap required holes<br>
+                ● Machine features, slots, and profiles<br>
+                ● Complete optional broaching and surface grinding to final dimensions (bonus work)<br>
+                ● Maintain drawing tolerances and surface finish requirements<br><br>
+                <b>Work Performed</b><br><br>
+                ● Completed the majority of machining on a vertical mill; finished final surface quality and dimensions on a surface grinder<br>
+                ● Laid out features using a surface plate and height gauge<br>
+                ● Referenced and re-established datums during re-orientation using an edge finder<br>
+                ● Sequenced operations to maximize efficiency while maintaining accuracy (including optional broaching + grinding)<br><br>
+                <b>Tools &amp; Equipment</b><br><br>
+                ● Vertical mill, surface grinder, arbour press + broach kit<br>
+                ● Mitutoyo Absolute digital caliper, height gauge + surface plate, edge finder<br>
+                ● Go/No-Go gauge used throughout production<br><br>
+                <b>Quality &amp; Verification</b><br><br>
+                ● Verified dimensions after major operations and during setup changes<br>
+                ● Used a Go/No-Go gauge for compliance checks during machining and at project completion<br><br>
+                </p>
+
+                <div class="detail-gallery">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/MILLING_BLOCK_DRAWING_page-0001_rhjkbp.jpg" alt="Milling Block photo 1">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/MILL_BLOCK_7_z7s319.jpg" alt="Milling Block photo 2">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/MILL_BLOCK_4_lzsube.jpg" alt="Milling Block photo 3">
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-inner" id="detail-drill-gauge">
+              <h2 class="detail-title">Drill Gauge</h2>
+
+              <div class="detail-body">
+                <p>
+                  <b>Processes:</b> Layout, drilling, hand finishing, surface grinding<br><br>
+                  <b>Material:</b> Mild steel<br><br>
+                  Produced a drill gauge requiring accurate hole sizing, flatness, and a drawing-specified angle (121°). Emphasized layout accuracy, manual shaping, and precision finishing using surface grinding.<br><br>
+
+                  <b>Technical Scope:</b><br><br>
+                  ● Layout using surface plate/height gauge techniques (including sine bar use)<br>
+                  ● Drill hole sizes to match intended gauge function<br>
+                  ● Cut and file profile by hand to final shape<br>
+                  ● Surface grind for flatness and finish<br>
+                  ● Fully deburr and hand-finish all edges<br><br>
+
+                  <b>Work Performed</b><br><br>
+                  ● Performed layout using height gauge on a surface table, punches, scribes, and a sine bar method to achieve the specified angle<br>
+                  ● Drilled holes to required sizes on a drill press<br>
+                  ● Hand-shaped the profile (sawing + filing) and finished with emery cloth<br>
+                  ● Surface ground the part to improve flatness and final finish<br><br>
+
+                  <b>Tools &amp; Equipment</b><br><br>
+                  ● Drill press, surface grinder<br>
+                  ● Hand tools: hacksaw, files, emery cloth<br>
+                  ● Layout: sine bar, punches/scribes, height gauge + surface plate<br><br>
+
+                  <b>Quality &amp; Verification</b><br><br>
+                  ● Verified hole sizing for functional gauging<br>
+                  ● Achieved flatness and controlled finish via surface grinding<br>
+                  ● Confirmed angle and geometry against print requirements<br>
+                </p>
+
+                <div class="detail-gallery">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/DRILL_GAUGE_DRAWING_page-0001_on4evx.jpg" alt="Drill Gauge photo 1">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/Drill_Gauge_1_ylhqq2.jpg" alt="Drill Gauge photo 2">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/Drill_Gauge_2_kcyigx.jpg" alt="Drill Gauge photo 3">
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-inner" id="detail-tap-handle">
+              <h2 class="detail-title">Tap Handle</h2>
+
+              <div class="detail-body">
+                <p>
+                  <b>Processes:</b> Turning, tapering, knurling, threading, hand finishing<br><br>
+                  <b>Material:</b> Mild steel (5/8" bar stock handle components)<br><br>
+                  Machined a tap handle over multiple sessions across ~2 months, requiring repeatability and dimensional consistency so all components assembled correctly at final fit-up.<br><br>
+
+                  <b>Technical Scope:</b><br><br>
+                  ● Lathe operations to produce handle components to print<br>
+                  ● Taper setup calculations and execution<br>
+                  ● Knurling and controlled hand finishing<br>
+                  ● Threading/tapping methods to match print requirements<br>
+                  ● Maintain consistency across parts produced weeks apart<br><br>
+
+                  <b>Work Performed</b><br><br>
+                  ● Turned and finished handle components primarily on the lathe<br>
+                  ● Hand-finished in the lathe using emery cloth<br>
+                  ● Produced consistent threads (tapped by hand with guidance from the chuck setup)<br>
+                  ● Managed repeatability across multiple builds, focusing on consistent dimensions and assembly fit<br><br>
+
+                  <b>Tools &amp; Equipment</b><br><br>
+                  ● Lathe<br>
+                  ● Measuring: micrometre (during finishing), calliper as needed<br>
+                  ● Knurling tool (diamond knurl)<br><br>
+
+                  <b>Quality &amp; Verification</b><br><br>
+                  ● Print-controlled tolerances; final assembly confirmed functional fit and consistency between parts made at different times<br>
+                </p>
+
+                <div class="detail-gallery">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/TAP_HANDLE_ARMS_DRAWING_page-0001_m0iqng.jpg" alt="Tap Handle photo 1">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/TAP_HANDLE_ASSEMBLY_page-0001_mmp2tp.jpg" alt="Tap Handle photo 2">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/TAP_2_rd7on9.jpg" alt="Tap Handle photo 3">
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-inner" id="detail-tap-jaws">
+              <h2 class="detail-title">Tap Handle Jaws</h2>
+
+              <div class="detail-body">
+                <p>
+                  <b>Processes:</b> Layout, drilling/tapping, milling slots, hand profiling/fit-up<br><br>
+                  <b>Material:</b> Mild steel (3/4" square key stock)<br><br>
+                  Manufactured tap handle jaws requiring functional alignment, full thread engagement from either side, and proper clamping behaviour. Balanced functional accuracy with hand-finished profile quality.<br><br>
+
+                  <b>Technical Scope:</b><br><br>
+                  ● Layout on square stock<br>
+                  ● Drill and tap per print<br>
+                  ● Mill jaw slots/features<br>
+                  ● Assemble and hand-profile as a matched set<br>
+                  ● Ensure bolts thread fully and jaws align under tightening<br><br>
+
+                  <b>Work Performed</b><br><br>
+                  ● Laid out, drilled (drill press), and tapped the jaw fastener holes<br>
+                  ● Milled tap slots on the mill<br>
+                  ● Screwed jaws together and hand-filed rounded profiles (bastard file → finer file)<br>
+                  ● Identified and managed hand-fit variation: slight lip in some orientations due to realistic limits of hand-finishing accuracy<br><br>
+
+                  <b>Tools &amp; Equipment</b><br><br>
+                  ● Drill press, vertical mill<br>
+                  ● Hand tools: files (coarse to fine)<br><br>
+
+                  <b>Quality &amp; Verification</b><br><br>
+                  ● Primary functional check: bolts could be installed from either side and fully thread in (alignment + correct spec)<br>
+                  ● Cosmetic grading is acknowledged as somewhat subjective; function prioritized and verified<br>
+                </p>
+
+                <div class="detail-gallery">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/TAP_HANDLE_JAWS_DRAWING_page-0001_cnauti.jpg" alt="Tap Handle Jaws photo 1">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/TAP_3_tzhdb0.jpg" alt="Tap Handle Jaws photo 2">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/TAP_4_hoi70h.jpg" alt="Tap Handle Jaws photo 3">
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-inner" id="detail-robot-flange">
+              <h2 class="detail-title">Robot End-of-Arm Flange</h2>
+
+              <div class="detail-body">
+                <p>
+                  <b>Processes:</b> Turning, boring, bolt-hole layout on mill DRO, reaming, custom drawing creation<br><br>
+                  <b>Material:</b> Aluminum puck/bar stock cutouts<br><br>
+                  Created a UR5 end-of-arm flange based on OEM documentation, produced a custom AutoCAD drawing, machined the flange on the lathe and mill, and verified precision fit on a real robot. Included a machined flat that improved edge-finding and later benefited vision line-of-sight in a real UR5 + Robotiq vision setup.<br><br>
+
+                  <b>Technical Scope:</b><br><br>
+                  ● Interpret OEM mounting documentation and convert into a manufacturable drawing<br>
+                  ● Lathe operations for facing, OD/ID turning, boring, and profile features<br>
+                  ● Mill operations for bolt-hole circle + alignment pin hole (drill + ream)<br>
+                  ● Add a functional flat for setup accuracy and downstream integration<br><br>
+
+                  <b>Work Performed</b><br><br>
+                  ● Completed round features on the lathe: bore, lips, facing, profiles<br>
+                  ● Machined a flat for easier edge-finding and repeatable referencing<br>
+                  ● Cut bolt-hole circle using mill DRO<br>
+                  ● Drilled and reamed the alignment hole on the mill<br>
+                  ● Verified fit on UR5 with a close, smooth fit with no play<br><br>
+
+                  <b>Tools &amp; Equipment</b><br><br>
+                  ● Lathe, vertical mill (DRO)<br>
+                  ● Micrometre for verifying outside dimensions<br>
+                  ● OEM source: Universal Robots mounting documentation + AutoCAD drawing creation<br><br>
+
+                  <b>Quality &amp; Verification</b><br><br>
+                  ● Measured critical dimensions with micrometre prior to installation<br>
+                  ● Test-fit verified close tolerance and stable mounting on robot<br>
+                </p>
+
+                <div class="detail-gallery">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/EOAT_DRAWING_page-0001_du9ihn.jpg" alt="Robot flange photo 1">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/EOAT_4_up3wer.jpg" alt="Robot flange photo 2">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/END_OF_ARM_PUCK_INSTALL_1_gs3l18.jpg" alt="Robot flange photo 3">
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-inner" id="detail-plc-final">
+              <h2 class="detail-title">PLC 1 Final</h2>
+
+              <div class="detail-body">
+                <p>
+                  <b>Systems:</b> Allen-Bradley CompactLogix L16 + Studio 5000 ladder logic, UR5 robot + Robotiq vision, FESTO conveyor + pressing station integration<br><br>
+                  <b>Theme:</b> Real system integration + commissioning + I/O mapping<br><br>
+                  Integrated a UR5 pick-and-place (with Robotiq vision) into a PLC-controlled conveyor + pressing system, replacing the standard handling station. Built custom wiring/harnessing and integrated additional I/O through terminal blocks to support gripper control and system communication.<br><br>
+
+                  <b>Technical Scope:</b><br><br>
+                  ● Program ladder logic in Studio 5000 for multi-station sequencing<br>
+                  ● Establish system communication and signal flow across stations using modular connections (SysLink / D-sub) and PLC I/O expansion<br>
+                  ● Train robot vision from the pendant to detect and pick a puck from variable positions<br>
+                  ● Add a pneumatic solenoid controlled via UR I/O for gripper actuation<br>
+                  ● Commission and troubleshoot an integrated automation sequence<br><br>
+
+                  <b>Work Performed</b><br><br>
+                  ● Programmed ladder logic for real processing simulation and station coordination<br>
+                  ● Built a custom I/O harness wired directly to robot's I/O and integrated it into the system via terminal blocks<br>
+                  ● Wired and integrated an air solenoid to control the gripper open/close using UR I/O<br>
+                  ● Performed commissioning: I/O checkout, dry-run tests, live cycle tests<br>
+                  ● Troubleshot hardware/software issues and modified code in real time during debugging<br>
+                  ● Achieved near-complete function during the presentation and reached full functionality shortly afterward, validating the final system to the instructor<br><br>
+
+                  <b>Safety Considerations</b><br><br>
+                  ● Pressing station fail-safe logic detected loss of air/failure to actuate within a defined time window<br>
+                  ● UR collaborative robot features used intentionally: collision detection and programmed safety limits to restrict the work envelope<br>
+                  ● Noted improvement opportunity: add a dedicated E-stop integration for future iterations<br><br>
+                </p>
+
+                <div class="detail-gallery">
+                  <!-- ✅ Trigger: PLC 1 Final gallery image #1 shows 4 extras in lightbox -->
+                  <img
+                    src="https://res.cloudinary.com/dhbpbyrc9/image/upload/I.O_CHART_AND_LOGIC_page-0001_kvnupk.jpg"
+                    alt="PLC final photo 1"
+                    data-extra-stock="plc-final-1"
+                  >
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/final_setup_assembly_p0uxiv.jpg" alt="PLC final photo 2">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/control_box_q0kgms.jpg" alt="PLC final photo 3">
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-inner" id="detail-skate-sharpener">
+              <h2 class="detail-title">Skate Sharpener</h2>
+
+              <div class="detail-body">
+                <p>
+                  <b>Systems:</b> 3-phase power simulation, forward/reverse motor control, safety relay + E-stop + reset, 24 VDC controls<br><br>
+                  <b>Theme:</b> 3 phase motor control with timed interlocking forward and reverse control<br><br>
+                  Designed and built a control system simulating an automatic skate sharpener using forward/reverse indexing and mode-based timing. Implemented safety relay control to remove motion power immediately on stop conditions while keeping sensing active.<br><br>
+                  
+                  <b>Technical Scope:</b><br><br>
+                  ● Wire 3-phase motor power through breakers/contactors to simulate industrial motor control<br>
+                  ● Implement forward/reverse control with electrical/mechanical interlocking<br>
+                  ● Add mode selection (child/adult) affecting indexing time<br>
+                  ● Use proximity sensor as a start, permissive and safety stop condition<br>
+                  ● Integrate safety relay + E-stop with manual reset behaviour<br>
+                  ● Separate and document power vs control schematics<br><br>
+
+                  <b>Work Performed</b><br><br>
+                  ● Wired 3-phase power circuits to contactors (kept de-energized during testing for safety)<br>
+                  ● Built 24 VDC control logic for indexing and grinding motor enable<br>
+                  ● Implemented mode-based indexing: 7 s (adult) / 3 s (child)<br>
+                  ● Required part presence (prox) to start; immediate shutdown on part removal or stop<br>
+                  ● Integrated safety relay so E-stop drops all motion power until manually reset<br><br>
+
+                  <b>Safety Considerations</b><br><br>
+                  ● E-stop drops motion power while allowing sensors to remain active (industry-aligned approach)<br>
+                  ● Reset required after E-stop release before restarting the motion<br><br>
+                </p>
+
+                <div class="detail-gallery">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/Panel_wiring_iu6f30.jpg" alt="Skate sharpener photo 1">
+                  <img src="https://res.cloudinary.com/dhbpbyrc9/image/upload/skatesharpener_bh6a8g.png" alt="Skate sharpener photo 2">
+                  <img
+                    src="https://res.cloudinary.com/dhbpbyrc9/image/upload/SKATE_SHAPRENER_DRAWINGS_AND_REPORT_page-0001_vpudfm.jpg"
+                    alt="Skate sharpener photo 3"
+                    data-extra-stock="skate-sharpener-3"
+                  >
+                </div>
+              </div>
+            </div>
+
+          </section>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="overlay overlay-bio">
+    <div class="overlay-content">
+      <button class="back-button" type="button">← Back to main</button>
+
+      <div class="bio-shell">
+        <div class="bio-grid">
+          <section class="bio-card bio-biography">
+            <h2>Biography</h2>
+            <div class="bio-body">
+              <p>
+              I am an Electro-Mechanical and Automation Maintenance student with a strong foundation in both mechanical and electrical systems, supported by extensive hands-on experience in industrial fabrication, machine assembly, pneumatics, and automation environments.<br><br>
+              Through my Millwright Apprentice Co-op at ATS Life Sciences Systems, I've developed a high level of confidence in millwright-related tasks, including machine guarding, precision fit-up, alignment, interpretation of engineering drawings, and on-floor support during the build phase of automated equipment. Working alongside experienced tradespeople strengthened my understanding of industrial standards, safety practices, and the importance of quality workmanship.<br><br>
+              My technical education is complemented by a strong interest in automation and controls, where I have gained hands-on experience designing, wiring, programming, and troubleshooting both PLC-based systems and hardwired control circuits. I enjoy learning through system integration and commissioning, where programs and hardware are validated through real-world testing and iterative debugging.<br><br>
+              I am known for my initiative, reliability, and ability to adapt quickly in fast-paced industrial settings while maintaining a strong focus on safety, accuracy, and teamwork.<br><br>
+              </p>
+            </div>
+          </section>
+
+          <section class="bio-card">
+            <h2>Certifications & Technical Training</h2>
+            <div class="bio-body">
+              <ul class="bio-list">
+                <li><b>Electrical, Automation & Controls</b>
+                  <ul style="padding-top: 10px; padding-left: 30px;">
+                    <li>PLC Programming & Integration</li>
+                    <ul style="padding-top: 10px; padding-left: 60px;">
+                      <li>Allen-Bradley CompactLogix using Studio 5000 and Omron Sysmac</li>
+                      <li>Ladder logic development, I/O mapping, sequencing, testing, and troubleshooting</li>
+                      <li>Hands-on system integration and real-time debugging during commissioning</li>
+                    </ul>
+                    <li style="padding-top: 10px;">Hardwired Control Circuits</li>
+                    <ul style="padding-top: 10px; padding-left: 60px;">
+                      <li>Design and wiring of relay-based control circuits</li>
+                      <li>Pushbuttons, indicator lights, proximity sensors, timers, contactors, and interlocks</li>
+                      <li>Clear separation and documentation of power and control circuits</li>
+                    </ul>
+                    <li style="padding-top: 10px;">Variable Frequency Drives (VFDs)</li>
+                    <ul style="padding-top: 10px; padding-left: 60px;">
+                      <li>Parameter setup including min/max frequency limits and accel/decel curves</li>
+                      <li>Integration with pushbutton and PLC-based interlocks for safe motor control</li>
+                    </ul>
+                    <li style="padding-top: 10px;">Robotics & Automation Integration</li>
+                    <ul style="padding-top: 10px; padding-left: 60px;">
+                      <li>Integration of UR collaborative robots with PLC-controlled systems</li>
+                      <li>Robot I/O wiring, pneumatic solenoid control, and vision-based pick-and-place</li>
+                      <li>Commissioning through I/O checkout, dry runs, and live cycle testing</li>
+                    </ul>
+                  </ul>
+                </li>
+                <br>
+                <li><b>Mechanical, Pneumatic & Safety Systems</b></li>
+                <ul style="padding-top: 10px; padding-left: 30px;">
+                  <li>Industrial fabrication and assembly during a Millwright Apprentice Co-op in an automated machine-building environment</li>
+                  <li>Construction and installation of machine guarding using aluminum extrusion, including cutting, milling, deburring, and final assembly</li>
+                  <li>Precision fit-up and on-floor installation of mechanical tooling and modules using alignment dowels and custom fixtures</li>
+                  <li>Interpretation of engineering drawings, tolerances, orientations, and fastener requirements during build and installation</li>
+                  <li>Pneumatic system layout, hose routing, solenoid integration, and functional testing based on pneumatic schematics</li>
+                  <li>Support of toolmakers and electricians during machine builds, contributing to mechanical assembly and integration</li>
+                  <li>Safety-focused work practices, including PPE compliance, lockout/tagout awareness, and safe commissioning procedures</li>
+                </ul>
+                <br>
+                <li><b>Awards & Recognition</b></li>
+                <ul style="padding-top: 10px; padding-left: 30px;">
+                  <li>Conestoga College Canerector Foundation Scholar</li>
+                  <li>Ranked in the top 10% of the EMAM program</li>
+                  <li>Employer-endorsed co-op student with invitation to return</li>
+                </ul>
+              </ul>
+            </div>
+          </section>
+
+          <section class="bio-card">
+            <h2>Education</h2>
+            <div class="bio-body">
+              <ul class="bio-list">
+                <li><b>Electro-Mechanical and Automation Maintenance (EMAM)</b><br>Conestoga College<br><i>September 2024 – April 2026</i></li>
+                <ul style="padding-left: 40px;">
+                  <li>Comprehensive technical program covering both mechanical and electrical disciplines, exempting graduates from the first two levels of apprenticeship education(433A Millwright and 442A Industrial Electrician)</li>
+                  <li>Coursework and labs in industrial maintenance, PLCs, automation systems, motor controls, pneumatics, hydraulics, robotics, and preventive maintenance</li>
+                  <li>Strong emphasis on hands-on system integration, troubleshooting, and real-world industrial applications</li>
+                  <li>Strong emphasis on hands-on system integration, troubleshooting, and real-world industrial applications</li>
+                </ul>
+                <li><b>High School Diploma</b><br>Resurrection Catholic Secondary School<br><i>September 2019 - June 2023</i></li>
+              </ul>
+            </div>
+          </section>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ✅ Lightbox markup -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <div class="lightbox-panel" role="dialog" aria-modal="true" aria-label="Image preview">
+    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close">×</button>
+
+    <img class="lightbox-img" id="lightboxImg" src="" alt="">
+
+    <div class="lightbox-extras" id="lightboxExtras" aria-hidden="true">
+      <div class="lightbox-extras-title">More reference images</div>
+      <div class="lightbox-extras-grid" id="lightboxExtrasGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const container = document.querySelector('.container');
+  const leftSide = document.querySelector('.side.left');
+  const rightSide = document.querySelector('.side.right');
+  const backButtons = document.querySelectorAll('.back-button');
+
+  const projectCards = document.querySelectorAll('.project-card');
+  const detailPanels = document.querySelectorAll('.detail-inner');
+
+  const projectPhotoImg = document.getElementById('projectPhotoImg');
+  const projectPhotoTitle = document.getElementById('projectPhotoTitle');
+  const projectPhotoCaption = document.getElementById('projectPhotoCaption');
+
+  const projectsOverlay = document.querySelector('.overlay-projects');
+  const bioOverlay = document.querySelector('.overlay-bio');
+
+  const OPEN_LOCK_MS  = 400;
+  const CLOSE_LOCK_MS = 1150;
+
+  let lockTimer = null;
+
+  let activeCard = document.querySelector('.project-card.selected') || projectCards[0] || null;
+  let hoverCard = null;
+
+  const CAPTURE_EVENTS = [
+    "pointerdown","pointerup","click","dblclick",
+    "mousedown","mouseup","touchstart","touchend",
+    "wheel","contextmenu"
+  ];
+  function captureBlocker(e){
+    if (!container.classList.contains('transitioning')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+  }
+  function enableCaptureBlock(){
+    CAPTURE_EVENTS.forEach(ev => window.addEventListener(ev, captureBlocker, true));
+  }
+  function disableCaptureBlock(){
+    CAPTURE_EVENTS.forEach(ev => window.removeEventListener(ev, captureBlocker, true));
+  }
+
+  function lockUI(ms){
+    container.classList.add('transitioning');
+    enableCaptureBlock();
+    clearTimeout(lockTimer);
+    lockTimer = setTimeout(unlockUI, ms);
+  }
+
+  function unlockUI(){
+    clearTimeout(lockTimer);
+    lockTimer = null;
+    container.classList.remove('transitioning');
+    disableCaptureBlock();
+  }
+
+  function isLocked(){
+    return container.classList.contains('transitioning') || container.classList.contains('closing');
+  }
+
+  function openProjects() {
+    if (isLocked()) return;
+    lockUI(OPEN_LOCK_MS);
+
+    container.classList.remove('show-bio', 'closing', 'closing-bio', 'closing-projects', 'returning-bio', 'returning-projects');
+
+    container.classList.remove('show-projects');
+    void container.offsetWidth;
+    container.classList.add('show-projects');
+  }
+
+  function openBio() {
+    if (isLocked()) return;
+    lockUI(OPEN_LOCK_MS);
+
+    container.classList.remove('show-projects', 'closing', 'closing-bio', 'closing-projects', 'returning-bio', 'returning-projects');
+
+    container.classList.remove('show-bio');
+    void container.offsetWidth;
+    container.classList.add('show-bio');
+  }
+
+  function closeOverlay() {
+    if (isLocked()) return;
+
+    const closingProjects = container.classList.contains('show-projects');
+    const closingBio = container.classList.contains('show-bio');
+    if (!closingProjects && !closingBio) return;
+
+    lockUI(CLOSE_LOCK_MS);
+    container.classList.add('closing');
+
+    if (closingProjects) {
+      container.classList.add('closing-projects');
+
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+
+        container.classList.remove('show-projects', 'closing', 'closing-projects');
+
+        container.classList.add('returning-projects');
+        setTimeout(() => container.classList.remove('returning-projects'), 650);
+      };
+
+      projectsOverlay.addEventListener('animationend', (e) => {
+        if (e.animationName === 'overlayFadeOut') finish();
+      }, { once: true });
+
+      setTimeout(finish, 520);
+
+    } else {
+      container.classList.add('closing-bio');
+
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+
+        container.classList.remove('show-bio', 'closing', 'closing-bio');
+
+        container.classList.add('returning-bio');
+        setTimeout(() => container.classList.remove('returning-bio'), 650);
+      };
+
+      bioOverlay.addEventListener('animationend', (e) => {
+        if (e.animationName === 'overlayFadeOut') finish();
+      }, { once: true });
+
+      setTimeout(finish, 520);
     }
-  </script>
+  }
 
-  <script type="module">
-    import * as THREE from "three";
+  leftSide.addEventListener('click', openProjects);
+  rightSide.addEventListener('click', openBio);
+  backButtons.forEach(btn => btn.addEventListener('click', closeOverlay));
 
-    // ---------- Helpers ----------
-    const clamp01 = (v) => Math.min(1, Math.max(0, v));
-    const smoothstep = (edge0, edge1, x) => {
-      const t = clamp01((x - edge0) / (edge1 - edge0));
-      return t * t * (3 - 2 * t);
+  function fadeIn(el, duration = 220) {
+    el.getAnimations().forEach(a => a.cancel());
+    el.style.opacity = "0";
+    el.animate([{ opacity: 0 }, { opacity: 1 }], { duration, easing: "ease", fill: "forwards" });
+    el.style.opacity = "1";
+  }
+
+  function updateProjectPhotoFromCard(card) {
+    const url = card.dataset.photo;
+
+    const alt = card.dataset.photoalt || "";
+    const title = card.dataset.phototitle || card.querySelector("h2")?.textContent || "Project";
+    const caption = card.dataset.photocaption || "";
+
+    projectPhotoTitle.textContent = title;
+    projectPhotoCaption.textContent = caption;
+
+    const pre = new Image();
+    pre.onload = () => {
+      projectPhotoImg.src = url;
+      projectPhotoImg.alt = alt;
+      fadeIn(projectPhotoImg, 220);
     };
+    pre.onerror = () => {
+      projectPhotoImg.removeAttribute("src");
+      projectPhotoImg.alt = "";
+      projectPhotoCaption.textContent = "Image not found.";
+      fadeIn(projectPhotoImg, 220);
+    };
+    pre.src = url;
+  }
 
-    // ---------- Canvas / Renderer ----------
-    const canvas = document.getElementById("bg3d");
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      antialias: true,
-      alpha: true,
-      powerPreference: "high-performance"
-    });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  projectCards.forEach(card => {
+    card.addEventListener('click', () => {
+      if (container.classList.contains('transitioning')) return;
 
-    // ---------- Scene / Camera ----------
-    const scene = new THREE.Scene();
+      const targetId = card.getAttribute('data-target');
 
-    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-    camera.position.set(0, 0.25, 6);
+      projectCards.forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
 
-    // Soft, neutral lighting
-    const ambient = new THREE.AmbientLight(0xffffff, 0.85);
-    scene.add(ambient);
+      detailPanels.forEach(panel => {
+        const isActive = panel.id === targetId;
+        panel.classList.toggle('active', isActive);
 
-    const key = new THREE.DirectionalLight(0xffffff, 0.55);
-    key.position.set(3.5, 4.5, 3);
-    scene.add(key);
-
-    const fill = new THREE.DirectionalLight(0xffffff, 0.25);
-    fill.position.set(-4, 1.5, 2);
-    scene.add(fill);
-
-    // ---------- Objects ----------
-    const geo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
-
-    // Light grey, subtle sheen
-    const matMain = new THREE.MeshStandardMaterial({
-      color: new THREE.Color("#e9edf5"),
-      roughness: 0.35,
-      metalness: 0.10
-    });
-    const matAlt = new THREE.MeshStandardMaterial({
-      color: new THREE.Color("#f5f7fb"),
-      roughness: 0.30,
-      metalness: 0.08
-    });
-
-    // One cube (start state)
-    const singleCube = new THREE.Mesh(geo, matMain);
-    singleCube.position.set(0, 0, 0);
-    scene.add(singleCube);
-
-    // Three cubes (end state) - start hidden (scale 0.01)
-    const cubeA = new THREE.Mesh(geo, matAlt);
-    const cubeB = new THREE.Mesh(geo, matMain);
-    const cubeC = new THREE.Mesh(geo, matAlt);
-
-    [cubeA, cubeB, cubeC].forEach((m) => {
-      m.scale.setScalar(0.01);
-      scene.add(m);
-    });
-
-    // Targets for the three-cube layout
-    const targets = [
-      new THREE.Vector3(-1.75, 0.0, 0.0),
-      new THREE.Vector3( 0.00, 0.0, 0.0),
-      new THREE.Vector3( 1.75, 0.0, 0.0)
-    ];
-
-    // ---------- Scroll Progress (controls morph) ----------
-    const stage = document.getElementById("scrollStage");
-
-    function getProgress() {
-      const rect = stage.getBoundingClientRect();
-      const stageHeight = stage.offsetHeight;
-      const viewportH = window.innerHeight;
-
-      // When stage top at top => progress 0
-      // When stage bottom reaches top (i.e., scrolled through stageHeight - viewportH) => progress 1
-      const traveled = -rect.top;
-      const maxTravel = Math.max(1, stageHeight - viewportH);
-      return clamp01(traveled / maxTravel);
-    }
-
-    // ---------- Resize ----------
-    function resize() {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      renderer.setSize(w, h, false);
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-    }
-    window.addEventListener("resize", resize, { passive: true });
-    resize();
-
-    // ---------- Animation ----------
-    let t = 0;
-
-    function animate() {
-      requestAnimationFrame(animate);
-
-      const pRaw = getProgress();
-
-      // Add a little easing so it feels intentional
-      const p = smoothstep(0.0, 1.0, pRaw);
-
-      // Time
-      t += 0.008;
-
-      // Background motion (slow, subtle)
-      camera.position.x = Math.sin(t * 0.35) * 0.25;
-      camera.position.y = 0.25 + Math.cos(t * 0.28) * 0.12;
-      camera.lookAt(0, 0, 0);
-
-      // Rotate everything slightly
-      const baseRotX = 0.35 + Math.sin(t * 0.55) * 0.06;
-      const baseRotY = 0.65 + t * 0.18;
-
-      // Single cube fades/shrinks out as p -> 1
-      const singleScale = THREE.MathUtils.lerp(1.0, 0.25, p);
-      singleCube.scale.setScalar(singleScale);
-      singleCube.rotation.set(baseRotX, baseRotY, 0);
-
-      // Fade effect via material opacity (needs transparent)
-      singleCube.material.transparent = true;
-      singleCube.material.opacity = THREE.MathUtils.lerp(1.0, 0.0, p);
-
-      // Three cubes scale/appear as p -> 1
-      const trioScale = THREE.MathUtils.lerp(0.01, 0.85, p);
-
-      // Spread distance grows with p (so they split apart)
-      const spread = THREE.MathUtils.lerp(0.0, 1.0, p);
-
-      // Add a little vertical “pop” mid-transition
-      const pop = Math.sin(p * Math.PI) * 0.18;
-
-      const trio = [cubeA, cubeB, cubeC];
-      trio.forEach((cube, i) => {
-        cube.scale.setScalar(trioScale);
-        cube.rotation.set(
-          baseRotX + (i - 1) * 0.08,
-          baseRotY + (i - 1) * 0.18,
-          0
-        );
-
-        cube.material.transparent = true;
-        cube.material.opacity = THREE.MathUtils.lerp(0.0, 1.0, p);
-
-        // Position them toward targets
-        cube.position.lerpVectors(
-          new THREE.Vector3(0, 0, 0),
-          targets[i],
-          spread
-        );
-
-        // Subtle arc so it feels like “splitting”
-        cube.position.y += pop * (i === 1 ? 1.0 : 0.7);
+        if (isActive) {
+          const body = panel.querySelector('.detail-body');
+          if (body) body.scrollTop = 0;
+        }
       });
 
-      // Make the single cube gently move back as it disappears,
-      // and trio come forward a bit as they appear.
-      singleCube.position.z = THREE.MathUtils.lerp(0.0, -0.45, p);
-      cubeA.position.z = THREE.MathUtils.lerp(-0.35, 0.10, p);
-      cubeB.position.z = THREE.MathUtils.lerp(-0.35, 0.18, p);
-      cubeC.position.z = THREE.MathUtils.lerp(-0.35, 0.10, p);
+      activeCard = card;
+      updateProjectPhotoFromCard(card);
+    });
 
-      renderer.render(scene, camera);
+    card.addEventListener('mouseenter', () => {
+      if (container.classList.contains('transitioning')) return;
+      hoverCard = card;
+      updateProjectPhotoFromCard(card);
+    });
+
+    card.addEventListener('mouseleave', () => {
+      if (container.classList.contains('transitioning')) return;
+      hoverCard = null;
+      if (activeCard) updateProjectPhotoFromCard(activeCard);
+    });
+  });
+
+  const initial = document.querySelector('.project-card.selected') || projectCards[0];
+  if (initial) {
+    activeCard = initial;
+    updateProjectPhotoFromCard(initial);
+  }
+
+  /* ===========================
+     Lightbox behavior (+ extra images for specific gallery images)
+     =========================== */
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxClose = document.getElementById('lightboxClose');
+
+  const lightboxExtras = document.getElementById('lightboxExtras');
+  const lightboxExtrasGrid = document.getElementById('lightboxExtrasGrid');
+
+  let lastFocusedEl = null;
+
+  const EXTRA_STOCK_MAP = {
+    "skate-sharpener-3": [
+      "https://res.cloudinary.com/dhbpbyrc9/image/upload/SKATE_SHAPRENER_DRAWINGS_AND_REPORT_page-0002_bbd1ll.jpg",
+      "https://res.cloudinary.com/dhbpbyrc9/image/upload/SKATE_SHAPRENER_DRAWINGS_AND_REPORT_page-0003_dy7sob.jpg",
+      "https://res.cloudinary.com/dhbpbyrc9/image/upload/SKATE_SHAPRENER_DRAWINGS_AND_REPORT_page-0004_zdmlfk.jpg"
+    ],
+    "plc-final-1": [
+      "https://res.cloudinary.com/dhbpbyrc9/image/upload/I.O_CHART_AND_LOGIC_page-0002_knmmq9.jpg",
+      "https://res.cloudinary.com/dhbpbyrc9/image/upload/I.O_CHART_AND_LOGIC_page-0003_hijyws.jpg",
+      "https://res.cloudinary.com/dhbpbyrc9/image/upload/I.O_CHART_AND_LOGIC_page-0004_udglkr.jpg",
+      "https://res.cloudinary.com/dhbpbyrc9/image/upload/I.O_CHART_AND_LOGIC_page-0005_vuxpaa.jpg"
+    ]
+  };
+
+  function clearExtras(){
+    lightboxExtrasGrid.innerHTML = "";
+    lightboxExtras.classList.remove("open");
+    lightboxExtras.setAttribute("aria-hidden", "true");
+    lightboxExtrasGrid.classList.remove("cols-4");
+  }
+
+  function buildExtras(key){
+    clearExtras();
+    const urls = EXTRA_STOCK_MAP[key];
+    if (!urls || !urls.length) return;
+
+    // ✅ if this is the PLC set, switch to 4 columns on desktop
+    if (key === "plc-final-1") {
+      lightboxExtrasGrid.classList.add("cols-4");
     }
 
-    animate();
+    urls.forEach((url, idx) => {
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = `Extra stock image ${idx + 1}`;
 
-    // Footer year
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+      img.addEventListener("click", (e) => {
+        e.stopPropagation();
+        lightboxImg.src = url;
+        lightboxImg.alt = img.alt;
+      });
+
+      lightboxExtrasGrid.appendChild(img);
+    });
+
+    lightboxExtras.classList.add("open");
+    lightboxExtras.setAttribute("aria-hidden", "false");
+  }
+
+  function openLightboxFromImg(imgEl){
+    if (!imgEl || !imgEl.src) return;
+
+    lastFocusedEl = document.activeElement;
+
+    lightboxImg.src = imgEl.src;
+    lightboxImg.alt = imgEl.alt || "Preview image";
+
+    const extraKey = imgEl.dataset.extraStock;
+    if (extraKey) buildExtras(extraKey);
+    else clearExtras();
+
+    lightbox.classList.add('open');
+    lightbox.setAttribute('aria-hidden', 'false');
+
+    document.documentElement.style.overflow = 'hidden';
+
+    lightboxClose.focus();
+
+    const panel = lightbox.querySelector(".lightbox-panel");
+    if (panel) panel.scrollTop = 0;
+  }
+
+  function closeLightbox(){
+    lightbox.classList.remove('open');
+    lightbox.setAttribute('aria-hidden', 'true');
+
+    lightboxImg.removeAttribute('src');
+    lightboxImg.alt = "";
+
+    clearExtras();
+
+    document.documentElement.style.overflow = '';
+
+    if (lastFocusedEl && typeof lastFocusedEl.focus === "function") {
+      lastFocusedEl.focus();
+    }
+  }
+
+  document.addEventListener('click', (e) => {
+    const img = e.target.closest('.detail-gallery img');
+    if (!img) return;
+    if (container.classList.contains('transitioning')) return;
+    openLightboxFromImg(img);
+  });
+
+  lightboxClose.addEventListener('click', closeLightbox);
+
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) closeLightbox();
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightbox.classList.contains('open')) {
+      e.preventDefault();
+      closeLightbox();
+    }
+  });
+</script>
+
 </body>
 </html>
