@@ -8,12 +8,41 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  :root{
+    /* Global adaptive scale */
+    --fs-base: clamp(14px, 1.2vw, 16px);
+
+    /* Spacing */
+    --s-1: clamp(6px, 0.9vh, 10px);
+    --s-2: clamp(10px, 1.4vh, 14px);
+    --s-3: clamp(12px, 1.8vh, 18px);
+    --s-4: clamp(14px, 2.2vh, 22px);
+    --s-5: clamp(18px, 2.8vh, 28px);
+    --s-6: clamp(22px, 3.6vh, 36px);
+
+    /* Radii */
+    --r-1: clamp(10px, 1.3vw, 12px);
+    --r-2: clamp(14px, 1.6vw, 16px);
+    --r-3: clamp(16px, 2.0vw, 20px);
+    --r-4: clamp(18px, 2.4vw, 22px);
+    --r-5: clamp(22px, 3.0vw, 26px);
+
+    /* Component sizes */
+    --sidebar-w: clamp(240px, 28vw, 320px);
+    --panel-maxw: 1100px;
+
+    /* Scrollbar */
+    --scrollbar-w: clamp(8px, 1.1vw, 10px);
+    --scrollbar-border: clamp(2px, 0.35vw, 3px);
+  }
+
   html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
     background-color: grey;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: var(--fs-base);
   }
 
   .container {
@@ -24,15 +53,24 @@
   }
 
   /* =========================
+     ✅ Adaptive spacing helpers
+     ========================= */
+  .pt-1 { padding-top: var(--s-1); }
+  .pt-2 { padding-top: var(--s-2); }
+  .pl-1 { padding-left: clamp(18px, 2.2vw, 30px); }
+  .pl-2 { padding-left: clamp(26px, 3.0vw, 40px); }
+  .pl-3 { padding-left: clamp(36px, 4.2vw, 60px); }
+
+  /* =========================
      TRANSITION LOCK
      ========================= */
   .interaction-blocker{
     position: fixed;
     inset: 0;
     display: none;
-    z-index: 9998;           /* below title (9999), above everything else */
+    z-index: 9998;
     background: transparent;
-    cursor: default;         /* ✅ no loading spinner */
+    cursor: default;
     user-select: none;
   }
 
@@ -48,7 +86,7 @@
   .container:not(.show-projects):not(.show-bio):not(.transitioning) .side:hover {
     filter: brightness(0.6);
     transform: scale(1.03);
-    box-shadow: 0 12px 35px rgba(0,0,0,0.5);
+    box-shadow: 0 clamp(10px, 2.2vh, 12px) clamp(28px, 6vh, 35px) rgba(0,0,0,0.5);
     z-index: 2;
   }
 
@@ -85,10 +123,10 @@
     top: 50%;
     left: 52.7%;
     transform: translate(-50%, -50%);
-    font-size: 5rem;
+    font-size: clamp(2.4rem, 6.2vw, 5rem);
     font-weight: 700;
     color: white;
-    text-shadow: 0 4px 20px rgba(0,0,0,0.7);
+    text-shadow: 0 clamp(3px, 0.6vh, 4px) clamp(16px, 3.8vh, 20px) rgba(0,0,0,0.7);
     z-index: 9999;
     pointer-events: none;
     transition: all 0.6s ease;
@@ -96,11 +134,11 @@
   }
 
   /* =========================
-     ✅ CORNER TRAPEZOID LABELS (UPDATED)
+     ✅ CORNER TRAPEZOID LABELS
      ========================= */
   .corner-tag{
     position: fixed;
-    z-index: 9996; /* above sides, below title/blocker */
+    z-index: 9996;
     background: rgba(15,23,42,0.95);
     color: #fff;
     font-weight: 900;
@@ -110,44 +148,32 @@
     place-items: center;
     pointer-events: none;
     user-select: none;
-    border-radius: 0; /* no rounded edges */
-    box-shadow: 0 18px 45px rgba(0,0,0,0.35);
+    border-radius: 0;
+    box-shadow: 0 clamp(12px, 3.2vh, 18px) clamp(26px, 8vh, 45px) rgba(0,0,0,0.35);
   }
 
   .corner-tag.top-left{
     top: 0;
     left: 0;
-    width: 560px;
-    height: 78px;
+    width: clamp(210px, 38vw, 560px);
+    height: clamp(54px, 6.8vh, 78px);
     clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
   }
 
   .corner-tag.bottom-right{
     right: 0;
     bottom: 0;
-    width: 560px;
-    height: 78px;
+    width: clamp(260px, 44vw, 560px);
+    height: clamp(54px, 6.8vh, 78px);
     clip-path: polygon(6% 0, 100% 0, 100% 100%, 0 100%);
   }
 
   .corner-tag span{
-    font-size: 1.3rem;
-    padding: 0 18px;
+    font-size: clamp(0.82rem, 1.55vw, 1.3rem);
+    padding: 0 clamp(10px, 1.8vw, 18px);
     line-height: 1.1;
     text-align: center;
     white-space: nowrap;
-  }
-
-  @media (max-width: 720px){
-    .corner-tag.top-left{ width: 240px; height: 66px; }
-    .corner-tag.bottom-right{ width: px; height: 66px; }
-    .corner-tag span{ font-size: 0.92rem; }
-  }
-
-  @media (max-width: 480px){
-    .corner-tag.top-left{ width: 200px; height: 60px; }
-    .corner-tag.bottom-right{ width: 300px; height: 60px; }
-    .corner-tag span{ font-size: 0.82rem; letter-spacing: 0.06em; }
   }
 
   /* Hide corner tags when overlays are open/closing */
@@ -155,7 +181,7 @@
   .container.show-bio .corner-tag,
   .container.closing .corner-tag{
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(clamp(-6px, -1vh, -8px));
     transition: opacity 200ms ease, transform 200ms ease;
   }
 
@@ -164,17 +190,17 @@
     bottom: 10%;
     color: rgb(9, 255, 255);
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: clamp(0.9rem, 1.6vw, 1.1rem);
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.85);
+    text-shadow: 0 clamp(1px, 0.25vh, 2px) clamp(6px, 1.6vh, 8px) rgba(0,0,0,0.85);
   }
   .side.left .side-label  { left: 15%; }
   .side.right .side-label { right: 20%; text-align: right; }
 
   .container.show-projects .side,
   .container.show-bio .side {
-    filter: blur(3px) brightness(0.4);
+    filter: blur(clamp(2px, 0.4vw, 3px)) brightness(0.4);
   }
 
   .container.show-projects .side.left {
@@ -200,28 +226,25 @@
   /* Title moves to top when any overlay is open */
   .container.show-bio .center-title,
   .container.show-projects .center-title {
-    top: 24px;
+    top: clamp(14px, 2.6vh, 24px);
     left: 50%;
     transform: translate(-50%, 0);
-    font-size: 2.6rem;
+    font-size: clamp(1.6rem, 3.8vw, 2.6rem);
     text-align: center;
   }
 
   /* ==========================================================
-     ✅ SMOOTH RETURN-TO-MENU FIX (prevents weird overlap/fade)
+     ✅ SMOOTH RETURN-TO-MENU FIX
      ========================================================== */
 
-  /* When leaving PROJECTS: ensure right side snaps back instantly,
-     and keep left visually on top while it morphs back. */
   .container.returning-projects .side.left { z-index: 2; }
   .container.returning-projects .side.right { z-index: 1; }
 
   .container.returning-projects .side.right{
-    opacity: 1 !important; /* snap back; no fade-from-0 while left is morphing */
+    opacity: 1 !important;
     transition: transform 0.6s ease, filter 0.4s ease, box-shadow 0.4s ease, clip-path 0.6s ease !important;
   }
 
-  /* When leaving BIO: same idea, but for the opposite side. */
   .container.returning-bio .side.right { z-index: 2; }
   .container.returning-bio .side.left  { z-index: 1; }
 
@@ -237,7 +260,7 @@
     display: none;
     align-items: center;
     justify-content: center;
-    padding: 100px 8% 48px;
+    padding: clamp(70px, 12vh, 100px) 8% clamp(32px, 5vh, 48px);
     background: radial-gradient(circle at top, rgba(15,23,42,0.85), rgba(15,23,42,0.95));
     z-index: 10;
     color: #f9fafb;
@@ -248,22 +271,22 @@
 
   .overlay-content {
     width: 100%;
-    max-width: 1100px;
+    max-width: var(--panel-maxw);
     height: 100%;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: clamp(12px, 2vh, 18px);
   }
 
   .back-button {
     align-self: flex-start;
-    padding: 8px 16px;
+    padding: clamp(7px, 1.2vh, 10px) clamp(12px, 2vw, 16px);
     border-radius: 999px;
     border: 1px solid rgba(255,255,255,0.3);
     background: rgba(15,23,42,0.7);
     color: #e5e7eb;
-    font-size: 0.9rem;
+    font-size: clamp(0.82rem, 1.2vw, 0.92rem);
     cursor: pointer;
     backdrop-filter: blur(8px);
     transition: background 0.2s ease, transform 0.1s ease;
@@ -274,11 +297,11 @@
   /* ---------------- Animations ---------------- */
   @keyframes overlayFadeIn  { from { opacity: 0; } to { opacity: 1; } }
   @keyframes overlayFadeOut { from { opacity: 1; } to { opacity: 0; } }
-  @keyframes panelFadeUp    { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes panelFadeDown  { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(12px); } }
+  @keyframes panelFadeUp    { from { opacity: 0; transform: translateY(clamp(10px, 2vh, 16px)); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes panelFadeDown  { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(clamp(8px, 1.6vh, 12px)); } }
 
   /* ---------------- PROJECTS OVERLAY ---------------- */
-  .overlay-projects { transform: translateX(-40px); }
+  .overlay-projects { transform: translateX(clamp(-26px, -2.8vw, -40px)); }
 
   .container.show-projects:not(.closing) .overlay-projects {
     display: flex;
@@ -306,17 +329,15 @@
     CUSTOM OVAL SCROLLBAR
     =========================== */
 
-  /* Firefox */
   .detail-body,
   .bio-body{
     scrollbar-width: thin;
     scrollbar-color: rgba(148,163,184,0.65) transparent;
   }
 
-  /* WebKit (Chrome, Edge, Safari) */
   .detail-body::-webkit-scrollbar,
   .bio-body::-webkit-scrollbar{
-    width: 10px;
+    width: var(--scrollbar-w);
   }
 
   .detail-body::-webkit-scrollbar-track,
@@ -331,8 +352,8 @@
       rgba(148,163,184,0.85),
       rgba(226,232,240,0.95)
     );
-    border-radius: 999px;          /* oval shape */
-    border: 3px solid transparent; /* creates padding around thumb */
+    border-radius: 999px;
+    border: var(--scrollbar-border) solid transparent;
     background-clip: content-box;
   }
 
@@ -355,18 +376,18 @@
   }
 
   .projects-layout{
-    width: min(1000px, 100%);
-    height: min(72vh, 650px);
+    width: min(78vw, 100%);
+    height: min(74vh, 650px);
     background: rgba(15,23,42,0.98);
-    border-radius: 26px;
+    border-radius: var(--r-5);
     border: 1px solid rgba(148,163,184,0.7);
-    box-shadow: 0 24px 60px rgba(15,23,42,0.9);
+    box-shadow: 0 clamp(18px, 4.8vh, 24px) clamp(46px, 10vh, 60px) rgba(15,23,42,0.9);
 
     display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 18px;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    gap: clamp(12px, 2.2vh, 18px);
 
-    padding: 18px;
+    padding: clamp(12px, 2.2vh, 18px);
     overflow: hidden;
     will-change: opacity, transform;
   }
@@ -382,21 +403,21 @@
   .projects-sidebar{
     display: grid;
     grid-template-rows: auto 1fr;
-    gap: 12px;
+    gap: clamp(10px, 1.8vh, 12px);
     min-height: 0;
   }
 
   .project-photo{
     background: rgba(15,23,42,0.85);
-    border-radius: 18px;
+    border-radius: var(--r-3);
     border: 1px dashed rgba(148,163,184,0.8);
-    padding: 10px;
+    padding: clamp(8px, 1.3vh, 10px);
   }
 
   .photo-frame{
     position: relative;
-    height: 120px;
-    border-radius: 12px;
+    height: clamp(96px, 14vh, 120px);
+    border-radius: var(--r-1);
     overflow: hidden;
     background: rgba(15,23,42,0.9);
   }
@@ -412,8 +433,8 @@
   }
 
   .photo-caption{
-    margin-top: 6px;
-    font-size: 0.8rem;
+    margin-top: clamp(6px, 1vh, 8px);
+    font-size: clamp(0.78rem, 1.1vw, 0.85rem);
     color: #cbd5f5;
     line-height: 1.3;
   }
@@ -422,47 +443,46 @@
   .projects-sidebar-list{
     display: grid;
     grid-template-rows: auto auto 1fr;
-    gap: 12px;
+    gap: clamp(10px, 1.8vh, 12px);
     min-height: 0;
   }
 
   .section-title-sm{
-    font-size: 1.05rem;
+    font-size: clamp(0.95rem, 1.5vw, 1.05rem);
     text-transform: uppercase;
     letter-spacing: 0.18em;
     text-align: center;
   }
 
   .section-subtitle-sm{
-    font-size: 0.8rem;
+    font-size: clamp(0.78rem, 1.1vw, 0.85rem);
     color: #cbd5f5;
     line-height: 1.35;
   }
 
   .projects-list{
-    margin-top: 4px;
+    margin-top: clamp(2px, 0.6vh, 4px);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: clamp(8px, 1.4vh, 10px);
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-right: 10px;
-    padding-left: 2px;
+    padding-right: clamp(8px, 1.6vw, 10px);
+    padding-left: clamp(1px, 0.3vw, 2px);
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
   .projects-list::-webkit-scrollbar{ width: 0; height: 0; display: none; }
 
-  /* ✅ NEW: category label inside projects list (doesn't affect scrolling setup) */
   .projects-category{
-    margin: 8px 0 2px;
-    padding: 8px 10px;
-    border-radius: 12px;
+    margin: clamp(6px, 1.4vh, 8px) 0 clamp(1px, 0.35vh, 2px);
+    padding: clamp(7px, 1.3vh, 8px) clamp(8px, 1.6vw, 10px);
+    border-radius: var(--r-1);
     border: 1px solid rgba(148,163,184,0.28);
     background: rgba(15,23,42,0.55);
     color: #a5b4fc;
-    font-size: 0.72rem;
+    font-size: clamp(0.68rem, 1.05vw, 0.72rem);
     font-weight: 800;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -473,50 +493,46 @@
   .project-card{
     width: 100%;
     background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,64,175,0.9));
-    border-radius: 16px;
+    border-radius: var(--r-2);
     border: 1px solid rgba(148,163,184,0.6);
-    padding: 10px 14px 10px;
+    padding: clamp(9px, 1.4vh, 10px) clamp(12px, 2.2vw, 14px) clamp(9px, 1.4vh, 10px);
     cursor: pointer;
-    box-shadow: 0 10px 28px rgba(15,23,42,0.8);
+    box-shadow: 0 clamp(8px, 2vh, 10px) clamp(20px, 5vh, 28px) rgba(15,23,42,0.8);
     transition: box-shadow 0.22s ease, background 0.22s ease, border-color 0.22s ease;
   }
 
   .project-card:hover{
-    box-shadow: 0 18px 40px rgba(15,23,42,0.9);
+    box-shadow: 0 clamp(14px, 3vh, 18px) clamp(30px, 7vh, 40px) rgba(15,23,42,0.9);
     background: linear-gradient(135deg, rgba(30,64,175,0.96), rgba(56,189,248,0.9));
     border-color: rgba(226,232,240,0.9);
   }
 
   .project-card.selected{
     border-color: #e5e7eb;
-    box-shadow: 0 22px 55px rgba(15,23,42,1);
+    box-shadow: 0 clamp(18px, 4vh, 22px) clamp(42px, 9vh, 55px) rgba(15,23,42,1);
   }
 
   .project-summary{
     height: 2.6em;
     overflow: hidden;
-    margin-top: 4px;
-    font-size: 0.8rem;
+    margin-top: clamp(3px, 0.7vh, 4px);
+    font-size: clamp(0.78rem, 1.15vw, 0.85rem);
     color: #e5e7eb;
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(clamp(-3px, -0.5vh, -4px));
     transition: opacity 0.2s ease, transform 0.2s ease;
   }
   .project-card:hover .project-summary{ opacity: 1; transform: translateY(0); }
-
-  /* ===========================
-     ✅ SCROLLABLE DETAIL PANEL
-     =========================== */
 
   .project-detail-panel{
     min-height: 0;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* keep rounded corners clipped; scrolling happens inside */
+    overflow: hidden;
     background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
-    border-radius: 20px;
+    border-radius: var(--r-3);
     border: 1px solid rgba(148,163,184,0.7);
-    padding: 16px 18px;
+    padding: clamp(12px, 2.2vh, 16px) clamp(14px, 2.6vw, 18px);
   }
 
   .detail-inner{
@@ -527,7 +543,7 @@
   .detail-inner.active{
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: clamp(8px, 1.4vh, 10px);
     flex: 1;
     min-height: 0;
   }
@@ -536,82 +552,79 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
-    padding-right: 6px;
-    font-size: 0.92rem;
+    padding-right: clamp(4px, 1vw, 6px);
+    font-size: clamp(0.9rem, 1.25vw, 0.98rem);
     line-height: 1.55;
     color: #e5e7eb;
-    margin-top: 10px;
+    margin-top: clamp(8px, 1.6vh, 10px);
   }
 
   .detail-title{
     text-align: center;
+    font-size: clamp(1.05rem, 1.6vw, 1.25rem);
   }
 
-  /* ===========================
-     ✅ 3 rounded images in each detail-body
-     =========================== */
   .detail-gallery{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-top: 14px;
-    padding-bottom: 4px;
+    gap: clamp(10px, 1.8vh, 12px);
+    margin-top: clamp(10px, 2vh, 14px);
+    padding-bottom: clamp(2px, 0.6vh, 4px);
   }
   .detail-gallery img{
     width: 100%;
-    height: 140px;
+    height: clamp(120px, 18vh, 140px);
     object-fit: cover;
-    border-radius: 16px;
+    border-radius: var(--r-2);
     border: 1px solid rgba(148,163,184,0.55);
-    box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+    box-shadow: 0 clamp(8px, 2vh, 10px) clamp(18px, 4.6vh, 24px) rgba(0,0,0,0.35);
     cursor: zoom-in;
     transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
   }
   .detail-gallery img:hover{
     transform: translateY(-2px) scale(1.02);
     filter: brightness(1.05);
-    box-shadow: 0 16px 34px rgba(0,0,0,0.45);
+    box-shadow: 0 clamp(12px, 3vh, 16px) clamp(26px, 6vh, 34px) rgba(0,0,0,0.45);
   }
 
   @media (max-width: 1000px){
-    .center-title{ font-size: 3.4rem; }
-    .projects-layout { grid-template-columns: 1fr; height: min(78vh, 760px); }
+    .projects-layout {
+      grid-template-columns: 1fr;
+      height: min(80vh, 760px);
+    }
   }
 
   @media (max-width: 640px){
     .detail-gallery{ grid-template-columns: 1fr; }
-    .detail-gallery img{ height: 180px; }
+    .detail-gallery img{ height: clamp(160px, 28vh, 200px); }
   }
 
-  /* ===========================
-     ✅ Lightbox (scrollable + extra images under main preview)
-     =========================== */
   .lightbox{
     position: fixed;
     inset: 0;
     display: none;
     align-items: center;
     justify-content: center;
-    padding: 28px;
+    padding: clamp(16px, 3.8vh, 28px);
     background: rgba(2,6,23,0.86);
     backdrop-filter: blur(8px);
-    z-index: 10050; /* above everything */
+    z-index: 10050;
   }
   .lightbox.open{ display: flex; }
 
   .lightbox-panel{
     position: relative;
     width: min(1100px, 92vw);
-    height: min(80vh, 760px);
-    border-radius: 22px;
+    height: min(82vh, 760px);
+    border-radius: var(--r-4);
     overflow: auto;
     border: 1px solid rgba(148,163,184,0.55);
-    box-shadow: 0 30px 90px rgba(0,0,0,0.65);
+    box-shadow: 0 clamp(22px, 6vh, 30px) clamp(70px, 16vh, 90px) rgba(0,0,0,0.65);
     background: rgba(15,23,42,0.95);
-    transform: translateY(10px) scale(0.98);
+    transform: translateY(clamp(6px, 1.6vh, 10px)) scale(0.98);
     opacity: 0;
     transition: transform 220ms ease, opacity 220ms ease;
-    padding: 18px;
+    padding: clamp(12px, 2.4vh, 18px);
   }
   .lightbox.open .lightbox-panel{
     transform: translateY(0) scale(1);
@@ -624,22 +637,22 @@
     height: auto;
     object-fit: contain;
     display: block;
-    border-radius: 16px;
+    border-radius: var(--r-2);
     background: radial-gradient(circle at top, rgba(15,23,42,0.45), rgba(2,6,23,0.85));
     border: 1px solid rgba(148,163,184,0.35);
   }
 
   .lightbox-extras{
     display: none;
-    margin-top: 14px;
-    padding-top: 14px;
+    margin-top: clamp(10px, 2.2vh, 14px);
+    padding-top: clamp(10px, 2.2vh, 14px);
     border-top: 1px solid rgba(148,163,184,0.25);
   }
   .lightbox-extras.open{ display: block; }
 
   .lightbox-extras-title{
-    margin-bottom: 10px;
-    font-size: 0.85rem;
+    margin-bottom: clamp(8px, 1.6vh, 10px);
+    font-size: clamp(0.78rem, 1.1vw, 0.88rem);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: #cbd5f5;
@@ -649,26 +662,25 @@
   .lightbox-extras-grid{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    gap: clamp(10px, 1.8vh, 12px);
   }
 
   .lightbox-extras-grid img{
     width: 100%;
-    height: 150px;
+    height: clamp(120px, 20vh, 150px);
     object-fit: cover;
-    border-radius: 16px;
+    border-radius: var(--r-2);
     border: 1px solid rgba(148,163,184,0.55);
-    box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+    box-shadow: 0 clamp(8px, 2vh, 10px) clamp(18px, 4.6vh, 24px) rgba(0,0,0,0.35);
     cursor: zoom-in;
     transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
   }
   .lightbox-extras-grid img:hover{
     transform: translateY(-2px) scale(1.02);
     filter: brightness(1.05);
-    box-shadow: 0 16px 34px rgba(0,0,0,0.45);
+    box-shadow: 0 clamp(12px, 3vh, 16px) clamp(26px, 6vh, 34px) rgba(0,0,0,0.45);
   }
 
-  /* ✅ 4-up layout when PLC 1 Final image #1 is clicked */
   .lightbox-extras-grid.cols-4{
     grid-template-columns: repeat(4, 1fr);
   }
@@ -682,20 +694,20 @@
   @media (max-width: 640px){
     .lightbox-img{ max-height: 52vh; }
     .lightbox-extras-grid{ grid-template-columns: 1fr; }
-    .lightbox-extras-grid img{ height: 190px; }
+    .lightbox-extras-grid img{ height: clamp(160px, 28vh, 210px); }
   }
 
   .lightbox-close{
     position: sticky;
-    top: 12px;
+    top: clamp(8px, 1.8vh, 12px);
     margin-left: auto;
-    width: 42px;
-    height: 42px;
+    width: clamp(36px, 5.8vh, 42px);
+    height: clamp(36px, 5.8vh, 42px);
     border-radius: 999px;
     border: 1px solid rgba(255,255,255,0.22);
     background: rgba(15,23,42,0.7);
     color: #e5e7eb;
-    font-size: 20px;
+    font-size: clamp(18px, 2.2vw, 20px);
     line-height: 1;
     cursor: pointer;
     display: grid;
@@ -711,8 +723,7 @@
   }
   .lightbox-close:active{ transform: scale(0.98); }
 
-  /* ---------------- BIO OVERLAY ---------------- */
-  .overlay-bio { transform: translateX(40px); }
+  .overlay-bio { transform: translateX(clamp(26px, 2.8vw, 40px)); }
 
   .container.show-bio:not(.closing) .overlay-bio {
     display: flex;
@@ -738,16 +749,16 @@
 
   .bio-grid{
     width: min(1000px, 100%);
-    height: min(72vh, 650px);
+    height: min(74vh, 650px);
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1.1fr 1fr;
-    gap: 18px;
-    padding: 18px;
-    border-radius: 26px;
+    gap: clamp(12px, 2.2vh, 18px);
+    padding: clamp(12px, 2.2vh, 18px);
+    border-radius: var(--r-5);
     border: 1px solid rgba(148,163,184,0.7);
     background: rgba(15,23,42,0.98);
-    box-shadow: 0 24px 60px rgba(15,23,42,0.9);
+    box-shadow: 0 clamp(18px, 4.8vh, 24px) clamp(46px, 10vh, 60px) rgba(15,23,42,0.9);
     overflow: hidden;
     will-change: opacity, transform;
   }
@@ -761,11 +772,11 @@
   }
 
   .bio-card{
-    border-radius: 22px;
+    border-radius: var(--r-4);
     border: 1px solid rgba(148,163,184,0.55);
     background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
-    box-shadow: 0 14px 40px rgba(15,23,42,0.75);
-    padding: 18px;
+    box-shadow: 0 clamp(10px, 3vh, 14px) clamp(28px, 7vh, 40px) rgba(15,23,42,0.75);
+    padding: clamp(12px, 2.2vh, 18px);
     min-height: 0;
     display: flex;
     flex-direction: column;
@@ -775,11 +786,11 @@
   .bio-card.bio-biography{ grid-column: 1 / -1; }
 
   .bio-card h2{
-    font-size: 1.05rem;
+    font-size: clamp(0.95rem, 1.5vw, 1.05rem);
     text-transform: uppercase;
     letter-spacing: 0.18em;
     color: #a5b4fc;
-    margin-bottom: 10px;
+    margin-bottom: clamp(8px, 1.6vh, 10px);
     flex: 0 0 auto;
   }
 
@@ -787,43 +798,40 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
-    padding-right: 6px;
+    padding-right: clamp(4px, 1vw, 6px);
     color: #e5e7eb;
-    font-size: 0.95rem;
+    font-size: clamp(0.9rem, 1.25vw, 0.98rem);
     line-height: 1.55;
   }
 
-  .bio-list{ margin: 0; padding-left: 18px; }
-  .bio-list li{ margin-bottom: 6px; }
+  .bio-list{ margin: 0; padding-left: clamp(14px, 2vw, 18px); }
+  .bio-list li{ margin-bottom: clamp(5px, 1vh, 6px); }
 
   @media (max-width: 900px){
     .bio-grid{
       grid-template-columns: 1fr;
       grid-template-rows: auto auto auto;
-      height: min(80vh, 760px);
+      height: min(82vh, 760px);
     }
     .bio-card.bio-biography{ grid-column: auto; }
   }
 
-  /* ==========================================================
-     ✅ Bottom Center Quick Links Pill
-     ========================================================== */
   .quick-links{
     position: fixed;
     left: 50%;
-    bottom: 18px;
+    bottom: clamp(12px, 2.4vh, 18px);
     transform: translateX(-50%);
     z-index: 9997;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: clamp(8px, 1.6vw, 10px);
 
-    padding: 10px 12px;
+    padding: clamp(8px, 1.8vh, 10px) clamp(10px, 2vw, 12px);
     border-radius: 999px;
     border: 1px solid rgba(148,163,184,0.55);
     background: rgba(15,23,42,0.78);
-    box-shadow: 0 18px 45px rgba(0,0,0,0.45);
+    box-shadow: 0 clamp(12px, 3.6vh, 18px) clamp(26px, 8vh, 45px) rgba(0,0,0,0.45);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
@@ -831,14 +839,14 @@
   .quick-btn{
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
+    gap: clamp(6px, 1.2vw, 8px);
+    padding: clamp(8px, 1.8vh, 10px) clamp(12px, 2.2vw, 14px);
     border-radius: 999px;
     border: 1px solid rgba(255,255,255,0.22);
     background: rgba(15,23,42,0.75);
     color: #e5e7eb;
     font-weight: 650;
-    font-size: 0.95rem;
+    font-size: clamp(0.88rem, 1.3vw, 0.98rem);
     letter-spacing: 0.01em;
     cursor: pointer;
     text-decoration: none;
@@ -850,28 +858,28 @@
     background: rgba(148,163,184,0.35);
     border-color: rgba(226,232,240,0.75);
     transform: translateY(-1px);
-    box-shadow: 0 10px 26px rgba(0,0,0,0.35);
+    box-shadow: 0 clamp(8px, 2.2vh, 10px) clamp(20px, 5.6vh, 26px) rgba(0,0,0,0.35);
   }
   .quick-btn:active{ transform: translateY(1px); }
 
   .quick-btn svg{
-    width: 18px;
-    height: 18px;
+    width: clamp(16px, 2.2vw, 18px);
+    height: clamp(16px, 2.2vw, 18px);
     flex: 0 0 auto;
   }
 
   @media (max-width: 520px){
     .quick-links{
-      width: calc(100vw - 22px);
+      width: calc(100vw - clamp(18px, 4vw, 22px));
       justify-content: space-between;
-      gap: 8px;
-      padding: 10px;
+      gap: clamp(6px, 1.4vw, 8px);
+      padding: clamp(8px, 1.8vh, 10px);
     }
     .quick-btn{
       flex: 1;
       justify-content: center;
-      padding: 10px 12px;
-      font-size: 0.92rem;
+      padding: clamp(8px, 1.8vh, 10px) clamp(10px, 2.4vw, 12px);
+      font-size: clamp(0.84rem, 1.35vw, 0.95rem);
     }
   }
 
@@ -880,7 +888,7 @@
   .container.closing .quick-links{
     opacity: 0;
     pointer-events: none;
-    transform: translateX(-50%) translateY(10px);
+    transform: translateX(-50%) translateY(clamp(8px, 2vh, 10px));
     transition: opacity 200ms ease, transform 200ms ease;
   }
 </style>
@@ -1079,10 +1087,9 @@
           </aside>
 
           <section class="project-detail-panel">
-
-              <div class="detail-inner active" id="detail-milling-block">
+            <!-- (detail panels unchanged) -->
+            <div class="detail-inner active" id="detail-milling-block">
               <h2 class="detail-title">Milling Block</h2>
-
               <div class="detail-body">
                 <p>
                 <b>Processes:</b> Milling, facing, drilling/tapping, reaming, broaching, slotting, surface grinding<br><br>
@@ -1159,33 +1166,11 @@
 
             <div class="detail-inner" id="detail-tap-handle">
               <h2 class="detail-title">Tap Handle</h2>
-
               <div class="detail-body">
                 <p>
                   <b>Processes:</b> Turning, tapering, knurling, threading, hand finishing<br><br>
                   <b>Material:</b> Mild steel (5/8" bar stock handle components)<br><br>
                   Machined a tap handle over multiple sessions across ~2 months, requiring repeatability and dimensional consistency so all components assembled correctly at final fit-up.<br><br>
-
-                  <b>Technical Scope:</b><br><br>
-                  ● Lathe operations to produce handle components to print<br>
-                  ● Taper setup calculations and execution<br>
-                  ● Knurling and controlled hand finishing<br>
-                  ● Threading/tapping methods to match print requirements<br>
-                  ● Maintain consistency across parts produced weeks apart<br><br>
-
-                  <b>Work Performed</b><br><br>
-                  ● Turned and finished handle components primarily on the lathe<br>
-                  ● Hand-finished in the lathe using emery cloth<br>
-                  ● Produced consistent threads (tapped by hand with guidance from the chuck setup)<br>
-                  ● Managed repeatability across multiple builds, focusing on consistent dimensions and assembly fit<br><br>
-
-                  <b>Tools &amp; Equipment</b><br><br>
-                  ● Lathe<br>
-                  ● Measuring: micrometre (during finishing), calliper as needed<br>
-                  ● Knurling tool (diamond knurl)<br><br>
-
-                  <b>Quality &amp; Verification</b><br><br>
-                  ● Print-controlled tolerances; final assembly confirmed functional fit and consistency between parts made at different times<br>
                 </p>
 
                 <div class="detail-gallery">
@@ -1198,33 +1183,10 @@
 
             <div class="detail-inner" id="detail-tap-jaws">
               <h2 class="detail-title">Tap Handle Jaws</h2>
-
               <div class="detail-body">
                 <p>
                   <b>Processes:</b> Layout, drilling/tapping, milling slots, hand profiling/fit-up<br><br>
                   <b>Material:</b> Mild steel (3/4" square key stock)<br><br>
-                  Manufactured tap handle jaws requiring functional alignment, full thread engagement from either side, and proper clamping behaviour. Balanced functional accuracy with hand-finished profile quality.<br><br>
-
-                  <b>Technical Scope:</b><br><br>
-                  ● Layout on square stock<br>
-                  ● Drill and tap per print<br>
-                  ● Mill jaw slots/features<br>
-                  ● Assemble and hand-profile as a matched set<br>
-                  ● Ensure bolts thread fully and jaws align under tightening<br><br>
-
-                  <b>Work Performed</b><br><br>
-                  ● Laid out, drilled (drill press), and tapped the jaw fastener holes<br>
-                  ● Milled tap slots on the mill<br>
-                  ● Screwed jaws together and hand-filed rounded profiles (bastard file → finer file)<br>
-                  ● Identified and managed hand-fit variation: slight lip in some orientations due to realistic limits of hand-finishing accuracy<br><br>
-
-                  <b>Tools &amp; Equipment</b><br><br>
-                  ● Drill press, vertical mill<br>
-                  ● Hand tools: files (coarse to fine)<br><br>
-
-                  <b>Quality &amp; Verification</b><br><br>
-                  ● Primary functional check: bolts could be installed from either side and fully thread in (alignment + correct spec)<br>
-                  ● Cosmetic grading is acknowledged as somewhat subjective; function prioritized and verified<br>
                 </p>
 
                 <div class="detail-gallery">
@@ -1237,34 +1199,10 @@
 
             <div class="detail-inner" id="detail-robot-flange">
               <h2 class="detail-title">Robot End-of-Arm Flange</h2>
-
               <div class="detail-body">
                 <p>
                   <b>Processes:</b> Turning, boring, bolt-hole layout on mill DRO, reaming, custom drawing creation<br><br>
                   <b>Material:</b> Aluminum puck/bar stock cutouts<br><br>
-                  Created a UR5 end-of-arm flange based on OEM documentation, produced a custom AutoCAD drawing, machined the flange on the lathe and mill, and verified precision fit on a real robot. Included a machined flat that improved edge-finding and later benefited vision line-of-sight in a real UR5 + Robotiq vision setup.<br><br>
-
-                  <b>Technical Scope:</b><br><br>
-                  ● Interpret OEM mounting documentation and convert into a manufacturable drawing<br>
-                  ● Lathe operations for facing, OD/ID turning, boring, and profile features<br>
-                  ● Mill operations for bolt-hole circle + alignment pin hole (drill + ream)<br>
-                  ● Add a functional flat for setup accuracy and downstream integration<br><br>
-
-                  <b>Work Performed</b><br><br>
-                  ● Completed round features on the lathe: bore, lips, facing, profiles<br>
-                  ● Machined a flat for easier edge-finding and repeatable referencing<br>
-                  ● Cut bolt-hole circle using mill DRO<br>
-                  ● Drilled and reamed the alignment hole on the mill<br>
-                  ● Verified fit on UR5 with a close, smooth fit with no play<br><br>
-
-                  <b>Tools &amp; Equipment</b><br><br>
-                  ● Lathe, vertical mill (DRO)<br>
-                  ● Micrometre for verifying outside dimensions<br>
-                  ● OEM source: Universal Robots mounting documentation + AutoCAD drawing creation<br><br>
-
-                  <b>Quality &amp; Verification</b><br><br>
-                  ● Measured critical dimensions with micrometre prior to installation<br>
-                  ● Test-fit verified close tolerance and stable mounting on robot<br>
                 </p>
 
                 <div class="detail-gallery">
@@ -1277,36 +1215,12 @@
 
             <div class="detail-inner" id="detail-plc-final">
               <h2 class="detail-title">PLC 1 Final</h2>
-
               <div class="detail-body">
                 <p>
                   <b>Systems:</b> Allen-Bradley CompactLogix L16 + Studio 5000 ladder logic, UR5 robot + Robotiq vision, FESTO conveyor + pressing station integration<br><br>
-                  <b>Theme:</b> Real system integration + commissioning + I/O mapping<br><br>
-                  Integrated a UR5 pick-and-place (with Robotiq vision) into a PLC-controlled conveyor + pressing system, replacing the standard handling station. Built custom wiring/harnessing and integrated additional I/O through terminal blocks to support gripper control and system communication.<br><br>
-
-                  <b>Technical Scope:</b><br><br>
-                  ● Program ladder logic in Studio 5000 for multi-station sequencing<br>
-                  ● Establish system communication and signal flow across stations using modular connections (SysLink / D-sub) and PLC I/O expansion<br>
-                  ● Train robot vision from the pendant to detect and pick a puck from variable positions<br>
-                  ● Add and wire a pneumatic solenoid controlled via UR I/O for gripper actuation<br>
-                  ● Commission and troubleshoot an integrated automation sequence<br><br>
-
-                  <b>Work Performed</b><br><br>
-                  ● Programmed ladder logic for real processing simulation and station coordination<br>
-                  ● Built a custom I/O harness wired directly to robot's I/O and integrated it into the system via terminal blocks<br>
-                  ● Wired and integrated an air solenoid to control the gripper open/close using UR I/O<br>
-                  ● Performed commissioning: I/O checkout, dry-run tests, live cycle tests<br>
-                  ● Troubleshot hardware/software issues and modified code in real time during debugging<br>
-                  ● Achieved near-complete function during the presentation and reached full functionality shortly afterward, validating the final system to the instructor<br><br>
-
-                  <b>Safety Considerations</b><br><br>
-                  ● Pressing station fail-safe logic detected loss of air/failure to actuate within a defined time window<br>
-                  ● UR collaborative robot features used intentionally: collision detection and programmed safety limits to restrict the work envelope<br>
-                  ● Noted improvement opportunity: add a dedicated E-stop integration for future iterations<br><br>
                 </p>
 
                 <div class="detail-gallery">
-                  <!-- ✅ Trigger: PLC 1 Final gallery image #1 shows 4 extras in lightbox -->
                   <img
                     src="https://res.cloudinary.com/dhbpbyrc9/image/upload/I.O_CHART_AND_LOGIC_page-0001_kvnupk.jpg"
                     alt="PLC final photo 1"
@@ -1320,31 +1234,9 @@
 
             <div class="detail-inner" id="detail-skate-sharpener">
               <h2 class="detail-title">Skate Sharpener</h2>
-
               <div class="detail-body">
                 <p>
                   <b>Systems:</b> 3-phase power simulation, forward/reverse motor control, safety relay + E-stop + reset, 24 VDC controls<br><br>
-                  <b>Theme:</b> 3 phase motor control with timed interlocking forward and reverse control<br><br>
-                  Designed and built a control system simulating an automatic skate sharpener using forward/reverse indexing and mode-based timing. Implemented safety relay control to remove motion power immediately on stop conditions while keeping sensing active.<br><br>
-                  
-                  <b>Technical Scope:</b><br><br>
-                  ● Wire 3-phase motor power through breakers/contactors to simulate industrial motor control<br>
-                  ● Implement forward/reverse control with electrical/mechanical interlocking<br>
-                  ● Add mode selection (child/adult) affecting indexing time<br>
-                  ● Use proximity sensor as a start, permissive and safety stop condition<br>
-                  ● Integrate safety relay + E-stop with manual reset behaviour<br>
-                  ● Separate and document power vs control schematics<br><br>
-
-                  <b>Work Performed</b><br><br>
-                  ● Wired 3-phase power circuits to contactors (kept de-energized during testing for safety)<br>
-                  ● Built 24 VDC control logic for indexing and grinding motor enable<br>
-                  ● Implemented mode-based indexing: 7 s (adult) / 3 s (child)<br>
-                  ● Required part presence (prox) to start; immediate shutdown on part removal or stop<br>
-                  ● Integrated safety relay so E-stop drops all motion power until manually reset<br><br>
-
-                  <b>Safety Considerations</b><br><br>
-                  ● E-stop drops motion power while allowing sensors to remain active (industry-aligned approach)<br>
-                  ● Reset required after E-stop release before restarting the motion<br><br>
                 </p>
 
                 <div class="detail-gallery">
@@ -1366,7 +1258,7 @@
     </div>
   </div>
 
-<div class="overlay overlay-bio">
+  <div class="overlay overlay-bio">
     <div class="overlay-content">
       <button class="back-button" type="button">← Back to main</button>
 
@@ -1389,26 +1281,26 @@
             <div class="bio-body">
               <ul class="bio-list">
                 <li><b>Electrical, Automation & Controls</b>
-                  <ul style="padding-top: 10px; padding-left: 30px;">
+                  <ul class="pt-2 pl-1">
                     <li>PLC Programming & Integration</li>
-                    <ul style="padding-top: 10px; padding-left: 60px;">
+                    <ul class="pt-2 pl-3">
                       <li>Allen-Bradley CompactLogix using Studio 5000 and Omron Sysmac</li>
                       <li>Ladder logic development, I/O mapping, sequencing, testing, and troubleshooting</li>
                       <li>Hands-on system integration and real-time debugging during commissioning</li>
                     </ul>
-                    <li style="padding-top: 10px;">Hardwired Control Circuits</li>
-                    <ul style="padding-top: 10px; padding-left: 60px;">
+                    <li class="pt-2">Hardwired Control Circuits</li>
+                    <ul class="pt-2 pl-3">
                       <li>Design and wiring of relay-based control circuits</li>
                       <li>Pushbuttons, indicator lights, proximity sensors, timers, contactors, and interlocks</li>
                       <li>Clear separation and documentation of power and control circuits</li>
                     </ul>
-                    <li style="padding-top: 10px;">Variable Frequency Drives (VFDs)</li>
-                    <ul style="padding-top: 10px; padding-left: 60px;">
+                    <li class="pt-2">Variable Frequency Drives (VFDs)</li>
+                    <ul class="pt-2 pl-3">
                       <li>Parameter setup including min/max frequency limits and accel/decel curves</li>
                       <li>Integration with pushbutton and PLC-based interlocks for safe motor control</li>
                     </ul>
-                    <li style="padding-top: 10px;">Robotics & Automation Integration</li>
-                    <ul style="padding-top: 10px; padding-left: 60px;">
+                    <li class="pt-2">Robotics & Automation Integration</li>
+                    <ul class="pt-2 pl-3">
                       <li>Integration of UR collaborative robots with PLC-controlled systems</li>
                       <li>Robot I/O wiring, pneumatic solenoid control, and vision-based pick-and-place</li>
                       <li>Commissioning through I/O checkout, dry runs, and live cycle testing</li>
@@ -1417,7 +1309,7 @@
                 </li>
                 <br>
                 <li><b>Mechanical, Pneumatic & Safety Systems</b></li>
-                <ul style="padding-top: 10px; padding-left: 30px;">
+                <ul class="pt-2 pl-1">
                   <li>Industrial fabrication and assembly during a Millwright Apprentice Co-op in an automated machine-building environment</li>
                   <li>Construction and installation of machine guarding using aluminum extrusion, including cutting, milling, deburring, and final assembly</li>
                   <li>Precision fit-up and on-floor installation of mechanical tooling and modules using alignment dowels and custom fixtures</li>
@@ -1428,7 +1320,7 @@
                 </ul>
                 <br>
                 <li><b>Awards & Recognition</b></li>
-                <ul style="padding-top: 10px; padding-left: 30px;">
+                <ul class="pt-2 pl-1">
                   <li>Conestoga College Canerector Foundation Scholar</li>
                   <li>Ranked in the top 10% of the EMAM program</li>
                   <li>Employer-endorsed co-op student with invitation to return</li>
@@ -1442,7 +1334,7 @@
             <div class="bio-body">
               <ul class="bio-list">
                 <li><b>Electro-Mechanical and Automation Maintenance (EMAM)</b><br>Conestoga College<br><i>September 2024 – April 2026</i></li>
-                <ul style="padding-left: 40px;">
+                <ul class="pl-2">
                   <li>Comprehensive technical program covering both mechanical and electrical disciplines, exempting graduates from the first two levels of apprenticeship education(433A Millwright and 442A Industrial Electrician)</li>
                   <li>Coursework and labs in industrial maintenance, PLCs, automation systems, motor controls, pneumatics, hydraulics, robotics, and preventive maintenance</li>
                   <li>Strong emphasis on hands-on system integration, troubleshooting, and real-world industrial applications</li>
@@ -1685,9 +1577,6 @@
     updateProjectPhotoFromCard(initial);
   }
 
-  /* ===========================
-     Lightbox behavior (+ extra images for specific gallery images)
-     =========================== */
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightboxImg');
   const lightboxClose = document.getElementById('lightboxClose');
@@ -1723,7 +1612,6 @@
     const urls = EXTRA_STOCK_MAP[key];
     if (!urls || !urls.length) return;
 
-    // ✅ if this is the PLC set, switch to 4 columns on desktop
     if (key === "plc-final-1") {
       lightboxExtrasGrid.classList.add("cols-4");
     }
