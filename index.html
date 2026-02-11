@@ -48,7 +48,7 @@
   .container:not(.show-projects):not(.show-bio):not(.transitioning) .side:hover {
     filter: brightness(0.6);
     transform: scale(1.03);
-    box-shadow: 0 12px 35px rgba(0,0,0,0.5);
+    box-shadow: 0 1.11vh 1.82vw rgba(0,0,0,0.5);
     z-index: 2;
   }
 
@@ -88,7 +88,7 @@
     font-size: 5rem;
     font-weight: 700;
     color: white;
-    text-shadow: 0 4px 20px rgba(0,0,0,0.7);
+    text-shadow: 0 0.37vh 1.04vw rgba(0,0,0,0.7);
     z-index: 9999;
     pointer-events: none;
     transition: all 0.6s ease;
@@ -111,22 +111,22 @@
     pointer-events: none;
     user-select: none;
     border-radius: 0; /* no rounded edges */
-    box-shadow: 0 18px 45px rgba(0,0,0,0.35);
+    box-shadow: 0 1.67vh 2.34vw rgba(0,0,0,0.35);
   }
 
   .corner-tag.top-left{
     top: 0;
     left: 0;
-    width: 560px;
-    height: 78px;
+    width: 29.17vw;
+    height: 7.22vh;
     clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
   }
 
   .corner-tag.bottom-right{
     right: 0;
     bottom: 0;
-    width: 560px;
-    height: 78px;
+    width: 29.17vw;
+    height: 7.22vh;
     clip-path: polygon(6% 0, 100% 0, 100% 100%, 0 100%);
   }
 
@@ -139,14 +139,14 @@
   }
 
   @media (max-width: 720px){
-    .corner-tag.top-left{ width: 240px; height: 66px; }
-    .corner-tag.bottom-right{ width: px; height: 66px; }
+    .corner-tag.top-left{ width: 12.50vw; height: 6.11vh; }
+    .corner-tag.bottom-right{ width: 12.50vw; height: 6.11vh; }
     .corner-tag span{ font-size: 0.92rem; }
   }
 
   @media (max-width: 480px){
-    .corner-tag.top-left{ width: 200px; height: 60px; }
-    .corner-tag.bottom-right{ width: 300px; height: 60px; }
+    .corner-tag.top-left{ width: 10.42vw; height: 5.56vh; }
+    .corner-tag.bottom-right{ width: 15.62vw; height: 5.56vh; }
     .corner-tag span{ font-size: 0.82rem; letter-spacing: 0.06em; }
   }
 
@@ -155,7 +155,7 @@
   .container.show-bio .corner-tag,
   .container.closing .corner-tag{
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-0.74vh);
     transition: opacity 200ms ease, transform 200ms ease;
   }
 
@@ -167,7 +167,7 @@
     font-size: 1.1rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.85);
+    text-shadow: 0 0.19vh 0.42vw rgba(0,0,0,0.85);
   }
   .side.left .side-label  { left: 15%; }
   .side.right .side-label { right: 20%; text-align: right; }
@@ -200,7 +200,7 @@
   /* Title moves to top when any overlay is open */
   .container.show-bio .center-title,
   .container.show-projects .center-title {
-    top: 24px;
+    top: 2.22vh;
     left: 50%;
     transform: translate(-50%, 0);
     font-size: 2.6rem;
@@ -237,7 +237,7 @@
     display: none;
     align-items: center;
     justify-content: center;
-    padding: 100px 8% 48px;
+    padding: 9.26vh 8% 4.44vh;
     background: radial-gradient(circle at top, rgba(15,23,42,0.85), rgba(15,23,42,0.95));
     z-index: 10;
     color: #f9fafb;
@@ -248,33 +248,33 @@
 
   .overlay-content {
     width: 100%;
-    max-width: 1100px;
+    max-width: 57.29vw;
     height: 100%;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 1.67vh;
   }
 
   .back-button {
     align-self: flex-start;
-    padding: 8px 16px;
-    border-radius: 999px;
+    padding: 0.74vh 0.83vw;
+    border-radius: 52.03vw;
     border: 1px solid rgba(255,255,255,0.3);
     background: rgba(15,23,42,0.7);
     color: #e5e7eb;
     font-size: 0.9rem;
     cursor: pointer;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(0.42vw);
     transition: background 0.2s ease, transform 0.1s ease;
   }
-  .back-button:hover  { background: rgba(148,163,184,0.4); transform: translateY(-1px); }
-  .back-button:active { transform: translateY(1px); }
+  .back-button:hover  { background: rgba(148,163,184,0.4); transform: translateY(-0.09vh); }
+  .back-button:active { transform: translateY(0.09vh); }
 
   /* ---------------- Animations ---------------- */
   @keyframes overlayFadeIn  { from { opacity: 0; } to { opacity: 1; } }
   @keyframes overlayFadeOut { from { opacity: 1; } to { opacity: 0; } }
-  @keyframes panelFadeUp    { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes panelFadeUp    { from { opacity: 0; transform: translateY(1.48vh); } to { opacity: 1; transform: translateY(0); } }
   @keyframes panelFadeDown  { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(12px); } }
 
   /* ---------------- PROJECTS OVERLAY ---------------- */
@@ -331,7 +331,7 @@
       rgba(148,163,184,0.85),
       rgba(226,232,240,0.95)
     );
-    border-radius: 999px;          /* oval shape */
+    border-radius: 52.03vw;          /* oval shape */
     border: 3px solid transparent; /* creates padding around thumb */
     background-clip: content-box;
   }
@@ -364,7 +364,7 @@
 
     display: grid;
     grid-template-columns: 280px 1fr;
-    gap: 18px;
+    gap: 0.94vw;
 
     padding: 18px;
     overflow: hidden;
@@ -594,7 +594,7 @@
     justify-content: center;
     padding: 28px;
     background: rgba(2,6,23,0.86);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(0.42vw);
     z-index: 10050; /* above everything */
   }
   .lightbox.open{ display: flex; }
@@ -691,7 +691,7 @@
     margin-left: auto;
     width: 42px;
     height: 42px;
-    border-radius: 999px;
+    border-radius: 52.03vw;
     border: 1px solid rgba(255,255,255,0.22);
     background: rgba(15,23,42,0.7);
     color: #e5e7eb;
@@ -742,7 +742,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1.1fr 1fr;
-    gap: 18px;
+    gap: 0.94vw;
     padding: 18px;
     border-radius: 26px;
     border: 1px solid rgba(148,163,184,0.7);
@@ -820,12 +820,12 @@
     gap: 10px;
 
     padding: 10px 12px;
-    border-radius: 999px;
+    border-radius: 52.03vw;
     border: 1px solid rgba(148,163,184,0.55);
     background: rgba(15,23,42,0.78);
     box-shadow: 0 18px 45px rgba(0,0,0,0.45);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(0.52vw);
+    -webkit-backdrop-filter: blur(0.52vw);
   }
 
   .quick-btn{
@@ -833,7 +833,7 @@
     align-items: center;
     gap: 8px;
     padding: 10px 14px;
-    border-radius: 999px;
+    border-radius: 52.03vw;
     border: 1px solid rgba(255,255,255,0.22);
     background: rgba(15,23,42,0.75);
     color: #e5e7eb;
