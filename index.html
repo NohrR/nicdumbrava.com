@@ -81,6 +81,7 @@
     height: auto;
     z-index: 10; /* Above everything */
     pointer-events: none; /* So it doesn't block interaction */
+    transition: opacity 260ms ease, transform 260ms ease;
   }
 
   .bottom-right-image {
@@ -91,6 +92,18 @@
     height: auto;
     z-index: 10; /* Above everything */
     pointer-events: none; /* So it doesn't block interaction */
+    transition: opacity 260ms ease, transform 260ms ease;
+  }
+
+  /* ✅ Hide corner images when overlays are open/closing */
+  .container.show-projects .top-left-image,
+  .container.show-projects .bottom-right-image,
+  .container.show-bio .top-left-image,
+  .container.show-bio .bottom-right-image,
+  .container.closing .top-left-image,
+  .container.closing .bottom-right-image{
+    opacity: 0;
+    transform: scale(0.98);
   }
 
   .side.left {
@@ -1326,7 +1339,7 @@
                   ● Program ladder logic in Studio 5000 for multi-station sequencing<br>
                   ● Establish system communication and signal flow across stations using modular connections (SysLink / D-sub) and PLC I/O expansion<br>
                   ● Train robot vision from the pendant to detect and pick a puck from variable positions<br>
-                  ● Add and wire a pneumatic solenoid controlled via UR I/O for gripper actuation<br>
+                  ● Add a pneumatic solenoid controlled via UR I/O for gripper actuation<br>
                   ● Commission and troubleshoot an integrated automation sequence<br><br>
 
                   <b>Work Performed</b><br><br>
@@ -1483,6 +1496,7 @@
                 <ul style="padding-left: 40px;">
                   <li>Comprehensive technical program covering both mechanical and electrical disciplines, exempting graduates from the first two levels of apprenticeship education(433A Millwright and 442A Industrial Electrician)</li>
                   <li>Coursework and labs in industrial maintenance, PLCs, automation systems, motor controls, pneumatics, hydraulics, robotics, and preventive maintenance</li>
+                  <li>Strong emphasis on hands-on system integration, troubleshooting, and real-world industrial applications</li>
                   <li>Strong emphasis on hands-on system integration, troubleshooting, and real-world industrial applications</li>
                 </ul>
                 <li><b>High School Diploma</b><br>Resurrection Catholic Secondary School<br><i>September 2019 - June 2023</i></li>
