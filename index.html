@@ -8,6 +8,16 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  /* ==========================================================
+     ✅ HI-RES SCALING (keeps 1920x1080 the “baseline”)
+     - On 2560x1440: scales up ~1.33x (1440/1080)
+     - Uses a single variable so you don’t have to convert everything to vw/vh
+     ========================================================== */
+  :root{
+    /* based on height so ultrawide doesn’t blow up; clamped for sanity */
+    --ui: clamp(1, 100vh / 1080, 1.45);
+  }
+
   html, body {
     width: 100%;
     height: 100%;
@@ -48,7 +58,7 @@
   .container:not(.show-projects):not(.show-bio):not(.transitioning) .side:hover {
     filter: brightness(0.6);
     transform: scale(1.03);
-    box-shadow: 0 1.11vh 1.82vw rgba(0,0,0,0.5);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.5);
     z-index: 2;
   }
 
@@ -85,10 +95,10 @@
     top: 50%;
     left: 52.7%;
     transform: translate(-50%, -50%);
-    font-size: 5rem;
+    font-size: calc(5rem * var(--ui));
     font-weight: 700;
     color: white;
-    text-shadow: 0 0.37vh 1.04vw rgba(0,0,0,0.7);
+    text-shadow: 0 4px 20px rgba(0,0,0,0.7);
     z-index: 9999;
     pointer-events: none;
     transition: all 0.6s ease;
@@ -111,42 +121,42 @@
     pointer-events: none;
     user-select: none;
     border-radius: 0; /* no rounded edges */
-    box-shadow: 0 1.67vh 2.34vw rgba(0,0,0,0.35);
+    box-shadow: 0 18px 45px rgba(0,0,0,0.35);
   }
 
   .corner-tag.top-left{
     top: 0;
     left: 0;
-    width: 29.17vw;
-    height: 7.22vh;
+    width: calc(560px * var(--ui));
+    height: calc(78px * var(--ui));
     clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
   }
 
   .corner-tag.bottom-right{
     right: 0;
     bottom: 0;
-    width: 29.17vw;
-    height: 7.22vh;
+    width: calc(560px * var(--ui));
+    height: calc(78px * var(--ui));
     clip-path: polygon(6% 0, 100% 0, 100% 100%, 0 100%);
   }
 
   .corner-tag span{
-    font-size: 1.3rem;
-    padding: 0 18px;
+    font-size: calc(1.3rem * var(--ui));
+    padding: 0 calc(18px * var(--ui));
     line-height: 1.1;
     text-align: center;
     white-space: nowrap;
   }
 
   @media (max-width: 720px){
-    .corner-tag.top-left{ width: 12.50vw; height: 6.11vh; }
-    .corner-tag.bottom-right{ width: 12.50vw; height: 6.11vh; }
+    .corner-tag.top-left{ width: 240px; height: 66px; }
+    .corner-tag.bottom-right{ width: 240px; height: 66px; }
     .corner-tag span{ font-size: 0.92rem; }
   }
 
   @media (max-width: 480px){
-    .corner-tag.top-left{ width: 10.42vw; height: 5.56vh; }
-    .corner-tag.bottom-right{ width: 15.62vw; height: 5.56vh; }
+    .corner-tag.top-left{ width: 200px; height: 60px; }
+    .corner-tag.bottom-right{ width: 300px; height: 60px; }
     .corner-tag span{ font-size: 0.82rem; letter-spacing: 0.06em; }
   }
 
@@ -155,7 +165,7 @@
   .container.show-bio .corner-tag,
   .container.closing .corner-tag{
     opacity: 0;
-    transform: translateY(-0.74vh);
+    transform: translateY(-8px);
     transition: opacity 200ms ease, transform 200ms ease;
   }
 
@@ -164,10 +174,10 @@
     bottom: 10%;
     color: rgb(9, 255, 255);
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: calc(1.1rem * var(--ui));
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    text-shadow: 0 0.19vh 0.42vw rgba(0,0,0,0.85);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.85);
   }
   .side.left .side-label  { left: 15%; }
   .side.right .side-label { right: 20%; text-align: right; }
@@ -200,28 +210,24 @@
   /* Title moves to top when any overlay is open */
   .container.show-bio .center-title,
   .container.show-projects .center-title {
-    top: 2.22vh;
+    top: calc(24px * var(--ui));
     left: 50%;
     transform: translate(-50%, 0);
-    font-size: 2.6rem;
+    font-size: calc(2.6rem * var(--ui));
     text-align: center;
   }
 
   /* ==========================================================
      ✅ SMOOTH RETURN-TO-MENU FIX (prevents weird overlap/fade)
      ========================================================== */
-
-  /* When leaving PROJECTS: ensure right side snaps back instantly,
-     and keep left visually on top while it morphs back. */
   .container.returning-projects .side.left { z-index: 2; }
   .container.returning-projects .side.right { z-index: 1; }
 
   .container.returning-projects .side.right{
-    opacity: 1 !important; /* snap back; no fade-from-0 while left is morphing */
+    opacity: 1 !important;
     transition: transform 0.6s ease, filter 0.4s ease, box-shadow 0.4s ease, clip-path 0.6s ease !important;
   }
 
-  /* When leaving BIO: same idea, but for the opposite side. */
   .container.returning-bio .side.right { z-index: 2; }
   .container.returning-bio .side.left  { z-index: 1; }
 
@@ -237,7 +243,7 @@
     display: none;
     align-items: center;
     justify-content: center;
-    padding: 9.26vh 8% 4.44vh;
+    padding: calc(100px * var(--ui)) 8% calc(48px * var(--ui));
     background: radial-gradient(circle at top, rgba(15,23,42,0.85), rgba(15,23,42,0.95));
     z-index: 10;
     color: #f9fafb;
@@ -248,33 +254,33 @@
 
   .overlay-content {
     width: 100%;
-    max-width: 57.29vw;
+    max-width: calc(1100px * var(--ui));
     height: 100%;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 1.67vh;
+    gap: calc(18px * var(--ui));
   }
 
   .back-button {
     align-self: flex-start;
-    padding: 0.74vh 0.83vw;
-    border-radius: 52.03vw;
+    padding: calc(8px * var(--ui)) calc(16px * var(--ui));
+    border-radius: 999px;
     border: 1px solid rgba(255,255,255,0.3);
     background: rgba(15,23,42,0.7);
     color: #e5e7eb;
-    font-size: 0.9rem;
+    font-size: calc(0.9rem * var(--ui));
     cursor: pointer;
-    backdrop-filter: blur(0.42vw);
+    backdrop-filter: blur(8px);
     transition: background 0.2s ease, transform 0.1s ease;
   }
-  .back-button:hover  { background: rgba(148,163,184,0.4); transform: translateY(-0.09vh); }
-  .back-button:active { transform: translateY(0.09vh); }
+  .back-button:hover  { background: rgba(148,163,184,0.4); transform: translateY(-1px); }
+  .back-button:active { transform: translateY(1px); }
 
   /* ---------------- Animations ---------------- */
   @keyframes overlayFadeIn  { from { opacity: 0; } to { opacity: 1; } }
   @keyframes overlayFadeOut { from { opacity: 1; } to { opacity: 0; } }
-  @keyframes panelFadeUp    { from { opacity: 0; transform: translateY(1.48vh); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes panelFadeUp    { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes panelFadeDown  { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(12px); } }
 
   /* ---------------- PROJECTS OVERLAY ---------------- */
@@ -305,18 +311,15 @@
   /* ===========================
     CUSTOM OVAL SCROLLBAR
     =========================== */
-
-  /* Firefox */
   .detail-body,
   .bio-body{
     scrollbar-width: thin;
     scrollbar-color: rgba(148,163,184,0.65) transparent;
   }
 
-  /* WebKit (Chrome, Edge, Safari) */
   .detail-body::-webkit-scrollbar,
   .bio-body::-webkit-scrollbar{
-    width: 10px;
+    width: calc(10px * var(--ui));
   }
 
   .detail-body::-webkit-scrollbar-track,
@@ -331,8 +334,8 @@
       rgba(148,163,184,0.85),
       rgba(226,232,240,0.95)
     );
-    border-radius: 52.03vw;          /* oval shape */
-    border: 3px solid transparent; /* creates padding around thumb */
+    border-radius: 999px;
+    border: calc(3px * var(--ui)) solid transparent;
     background-clip: content-box;
   }
 
@@ -356,17 +359,17 @@
 
   .projects-layout{
     width: min(75vw, 100%);
-    height: min(72vh, 650px);
+    height: min(72vh, calc(650px * var(--ui)));
     background: rgba(15,23,42,0.98);
-    border-radius: 26px;
+    border-radius: calc(26px * var(--ui));
     border: 1px solid rgba(148,163,184,0.7);
     box-shadow: 0 24px 60px rgba(15,23,42,0.9);
 
     display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 0.94vw;
+    grid-template-columns: calc(280px * var(--ui)) 1fr;
+    gap: calc(18px * var(--ui));
 
-    padding: 18px;
+    padding: calc(18px * var(--ui));
     overflow: hidden;
     will-change: opacity, transform;
   }
@@ -382,21 +385,21 @@
   .projects-sidebar{
     display: grid;
     grid-template-rows: auto 1fr;
-    gap: 12px;
+    gap: calc(12px * var(--ui));
     min-height: 0;
   }
 
   .project-photo{
     background: rgba(15,23,42,0.85);
-    border-radius: 18px;
+    border-radius: calc(18px * var(--ui));
     border: 1px dashed rgba(148,163,184,0.8);
-    padding: 10px;
+    padding: calc(10px * var(--ui));
   }
 
   .photo-frame{
     position: relative;
-    height: 120px;
-    border-radius: 12px;
+    height: calc(120px * var(--ui));
+    border-radius: calc(12px * var(--ui));
     overflow: hidden;
     background: rgba(15,23,42,0.9);
   }
@@ -412,8 +415,8 @@
   }
 
   .photo-caption{
-    margin-top: 6px;
-    font-size: 0.8rem;
+    margin-top: calc(6px * var(--ui));
+    font-size: calc(0.8rem * var(--ui));
     color: #cbd5f5;
     line-height: 1.3;
   }
@@ -422,47 +425,46 @@
   .projects-sidebar-list{
     display: grid;
     grid-template-rows: auto auto 1fr;
-    gap: 12px;
+    gap: calc(12px * var(--ui));
     min-height: 0;
   }
 
   .section-title-sm{
-    font-size: 1.05rem;
+    font-size: calc(1.05rem * var(--ui));
     text-transform: uppercase;
     letter-spacing: 0.18em;
     text-align: center;
   }
 
   .section-subtitle-sm{
-    font-size: 0.8rem;
+    font-size: calc(0.8rem * var(--ui));
     color: #cbd5f5;
     line-height: 1.35;
   }
 
   .projects-list{
-    margin-top: 4px;
+    margin-top: calc(4px * var(--ui));
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: calc(10px * var(--ui));
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-right: 10px;
-    padding-left: 2px;
+    padding-right: calc(10px * var(--ui));
+    padding-left: calc(2px * var(--ui));
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
   .projects-list::-webkit-scrollbar{ width: 0; height: 0; display: none; }
 
-  /* ✅ NEW: category label inside projects list (doesn't affect scrolling setup) */
   .projects-category{
-    margin: 8px 0 2px;
-    padding: 8px 10px;
-    border-radius: 12px;
+    margin: calc(8px * var(--ui)) 0 calc(2px * var(--ui));
+    padding: calc(8px * var(--ui)) calc(10px * var(--ui));
+    border-radius: calc(12px * var(--ui));
     border: 1px solid rgba(148,163,184,0.28);
     background: rgba(15,23,42,0.55);
     color: #a5b4fc;
-    font-size: 0.72rem;
+    font-size: calc(0.72rem * var(--ui));
     font-weight: 800;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -473,9 +475,9 @@
   .project-card{
     width: 100%;
     background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,64,175,0.9));
-    border-radius: 16px;
+    border-radius: calc(16px * var(--ui));
     border: 1px solid rgba(148,163,184,0.6);
-    padding: 10px 14px 10px;
+    padding: calc(10px * var(--ui)) calc(14px * var(--ui)) calc(10px * var(--ui));
     cursor: pointer;
     box-shadow: 0 10px 28px rgba(15,23,42,0.8);
     transition: box-shadow 0.22s ease, background 0.22s ease, border-color 0.22s ease;
@@ -495,8 +497,8 @@
   .project-summary{
     height: 2.6em;
     overflow: hidden;
-    margin-top: 4px;
-    font-size: 0.8rem;
+    margin-top: calc(4px * var(--ui));
+    font-size: calc(0.8rem * var(--ui));
     color: #e5e7eb;
     opacity: 0;
     transform: translateY(-4px);
@@ -507,16 +509,15 @@
   /* ===========================
      ✅ SCROLLABLE DETAIL PANEL
      =========================== */
-
   .project-detail-panel{
     min-height: 0;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* keep rounded corners clipped; scrolling happens inside */
+    overflow: hidden;
     background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
-    border-radius: 20px;
+    border-radius: calc(20px * var(--ui));
     border: 1px solid rgba(148,163,184,0.7);
-    padding: 16px 18px;
+    padding: calc(16px * var(--ui)) calc(18px * var(--ui));
   }
 
   .detail-inner{
@@ -527,7 +528,7 @@
   .detail-inner.active{
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: calc(10px * var(--ui));
     flex: 1;
     min-height: 0;
   }
@@ -536,32 +537,30 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
-    padding-right: 6px;
-    font-size: 0.92rem;
+    padding-right: calc(6px * var(--ui));
+    font-size: calc(0.92rem * var(--ui));
     line-height: 1.55;
     color: #e5e7eb;
-    margin-top: 10px;
+    margin-top: calc(10px * var(--ui));
   }
 
   .detail-title{
     text-align: center;
+    font-size: calc(1.35rem * var(--ui));
   }
 
-  /* ===========================
-     ✅ 3 rounded images in each detail-body
-     =========================== */
   .detail-gallery{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-top: 14px;
-    padding-bottom: 4px;
+    gap: calc(12px * var(--ui));
+    margin-top: calc(14px * var(--ui));
+    padding-bottom: calc(4px * var(--ui));
   }
   .detail-gallery img{
     width: 100%;
-    height: 140px;
+    height: calc(140px * var(--ui));
     object-fit: cover;
-    border-radius: 16px;
+    border-radius: calc(16px * var(--ui));
     border: 1px solid rgba(148,163,184,0.55);
     box-shadow: 0 10px 24px rgba(0,0,0,0.35);
     cursor: zoom-in;
@@ -592,18 +591,18 @@
     display: none;
     align-items: center;
     justify-content: center;
-    padding: 28px;
+    padding: calc(28px * var(--ui));
     background: rgba(2,6,23,0.86);
-    backdrop-filter: blur(0.42vw);
-    z-index: 10050; /* above everything */
+    backdrop-filter: blur(8px);
+    z-index: 10050;
   }
   .lightbox.open{ display: flex; }
 
   .lightbox-panel{
     position: relative;
-    width: min(1100px, 92vw);
-    height: min(80vh, 760px);
-    border-radius: 22px;
+    width: min(calc(1100px * var(--ui)), 92vw);
+    height: min(80vh, calc(760px * var(--ui)));
+    border-radius: calc(22px * var(--ui));
     overflow: auto;
     border: 1px solid rgba(148,163,184,0.55);
     box-shadow: 0 30px 90px rgba(0,0,0,0.65);
@@ -611,7 +610,7 @@
     transform: translateY(10px) scale(0.98);
     opacity: 0;
     transition: transform 220ms ease, opacity 220ms ease;
-    padding: 18px;
+    padding: calc(18px * var(--ui));
   }
   .lightbox.open .lightbox-panel{
     transform: translateY(0) scale(1);
@@ -624,22 +623,22 @@
     height: auto;
     object-fit: contain;
     display: block;
-    border-radius: 16px;
+    border-radius: calc(16px * var(--ui));
     background: radial-gradient(circle at top, rgba(15,23,42,0.45), rgba(2,6,23,0.85));
     border: 1px solid rgba(148,163,184,0.35);
   }
 
   .lightbox-extras{
     display: none;
-    margin-top: 14px;
-    padding-top: 14px;
+    margin-top: calc(14px * var(--ui));
+    padding-top: calc(14px * var(--ui));
     border-top: 1px solid rgba(148,163,184,0.25);
   }
   .lightbox-extras.open{ display: block; }
 
   .lightbox-extras-title{
-    margin-bottom: 10px;
-    font-size: 0.85rem;
+    margin-bottom: calc(10px * var(--ui));
+    font-size: calc(0.85rem * var(--ui));
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: #cbd5f5;
@@ -649,14 +648,14 @@
   .lightbox-extras-grid{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    gap: calc(12px * var(--ui));
   }
 
   .lightbox-extras-grid img{
     width: 100%;
-    height: 150px;
+    height: calc(150px * var(--ui));
     object-fit: cover;
-    border-radius: 16px;
+    border-radius: calc(16px * var(--ui));
     border: 1px solid rgba(148,163,184,0.55);
     box-shadow: 0 10px 24px rgba(0,0,0,0.35);
     cursor: zoom-in;
@@ -668,7 +667,6 @@
     box-shadow: 0 16px 34px rgba(0,0,0,0.45);
   }
 
-  /* ✅ 4-up layout when PLC 1 Final image #1 is clicked */
   .lightbox-extras-grid.cols-4{
     grid-template-columns: repeat(4, 1fr);
   }
@@ -687,15 +685,15 @@
 
   .lightbox-close{
     position: sticky;
-    top: 12px;
+    top: calc(12px * var(--ui));
     margin-left: auto;
-    width: 42px;
-    height: 42px;
-    border-radius: 52.03vw;
+    width: calc(42px * var(--ui));
+    height: calc(42px * var(--ui));
+    border-radius: 999px;
     border: 1px solid rgba(255,255,255,0.22);
     background: rgba(15,23,42,0.7);
     color: #e5e7eb;
-    font-size: 20px;
+    font-size: calc(20px * var(--ui));
     line-height: 1;
     cursor: pointer;
     display: grid;
@@ -737,14 +735,14 @@
   }
 
   .bio-grid{
-    width: min(1000px, 100%);
-    height: min(72vh, 650px);
+    width: min(calc(1000px * var(--ui)), 100%);
+    height: min(72vh, calc(650px * var(--ui)));
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1.1fr 1fr;
-    gap: 0.94vw;
-    padding: 18px;
-    border-radius: 26px;
+    gap: calc(18px * var(--ui));
+    padding: calc(18px * var(--ui));
+    border-radius: calc(26px * var(--ui));
     border: 1px solid rgba(148,163,184,0.7);
     background: rgba(15,23,42,0.98);
     box-shadow: 0 24px 60px rgba(15,23,42,0.9);
@@ -761,11 +759,11 @@
   }
 
   .bio-card{
-    border-radius: 22px;
+    border-radius: calc(22px * var(--ui));
     border: 1px solid rgba(148,163,184,0.55);
     background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
     box-shadow: 0 14px 40px rgba(15,23,42,0.75);
-    padding: 18px;
+    padding: calc(18px * var(--ui));
     min-height: 0;
     display: flex;
     flex-direction: column;
@@ -775,11 +773,11 @@
   .bio-card.bio-biography{ grid-column: 1 / -1; }
 
   .bio-card h2{
-    font-size: 1.05rem;
+    font-size: calc(1.05rem * var(--ui));
     text-transform: uppercase;
     letter-spacing: 0.18em;
     color: #a5b4fc;
-    margin-bottom: 10px;
+    margin-bottom: calc(10px * var(--ui));
     flex: 0 0 auto;
   }
 
@@ -787,14 +785,14 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
-    padding-right: 6px;
+    padding-right: calc(6px * var(--ui));
     color: #e5e7eb;
-    font-size: 0.95rem;
+    font-size: calc(0.95rem * var(--ui));
     line-height: 1.55;
   }
 
-  .bio-list{ margin: 0; padding-left: 18px; }
-  .bio-list li{ margin-bottom: 6px; }
+  .bio-list{ margin: 0; padding-left: calc(18px * var(--ui)); }
+  .bio-list li{ margin-bottom: calc(6px * var(--ui)); }
 
   @media (max-width: 900px){
     .bio-grid{
@@ -811,34 +809,34 @@
   .quick-links{
     position: fixed;
     left: 50%;
-    bottom: 18px;
+    bottom: calc(18px * var(--ui));
     transform: translateX(-50%);
     z-index: 9997;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: calc(10px * var(--ui));
 
-    padding: 10px 12px;
-    border-radius: 52.03vw;
+    padding: calc(10px * var(--ui)) calc(12px * var(--ui));
+    border-radius: 999px;
     border: 1px solid rgba(148,163,184,0.55);
     background: rgba(15,23,42,0.78);
     box-shadow: 0 18px 45px rgba(0,0,0,0.45);
-    backdrop-filter: blur(0.52vw);
-    -webkit-backdrop-filter: blur(0.52vw);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 
   .quick-btn{
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    border-radius: 52.03vw;
+    gap: calc(8px * var(--ui));
+    padding: calc(10px * var(--ui)) calc(14px * var(--ui));
+    border-radius: 999px;
     border: 1px solid rgba(255,255,255,0.22);
     background: rgba(15,23,42,0.75);
     color: #e5e7eb;
     font-weight: 650;
-    font-size: 0.95rem;
+    font-size: calc(0.95rem * var(--ui));
     letter-spacing: 0.01em;
     cursor: pointer;
     text-decoration: none;
@@ -855,8 +853,8 @@
   .quick-btn:active{ transform: translateY(1px); }
 
   .quick-btn svg{
-    width: 18px;
-    height: 18px;
+    width: calc(18px * var(--ui));
+    height: calc(18px * var(--ui));
     flex: 0 0 auto;
   }
 
@@ -864,10 +862,10 @@
     position: fixed;
     top: clamp(0px, 1.5vh, 0px);
     left: clamp(0px, 1.5vw, 0px);
-    width: clamp(60px, 8vw, 140px);
+    width: clamp(60px, 8vw, calc(140px * var(--ui)));
     height: auto;
-    z-index: 10; /* Above everything */
-    pointer-events: none; /* So it doesn't block interaction */
+    z-index: 10;
+    pointer-events: none;
     transition: opacity 260ms ease, transform 260ms ease;
   }
 
@@ -875,14 +873,13 @@
     position: fixed;
     bottom: clamp(0px, 1.5vh, 0px);
     right: clamp(0px, 1.5vw, 0px);
-    width: clamp(60px, 8vw, 140px);
+    width: clamp(60px, 8vw, calc(140px * var(--ui)));
     height: auto;
-    z-index: 10; /* Above everything */
-    pointer-events: none; /* So it doesn't block interaction */
+    z-index: 10;
+    pointer-events: none;
     transition: opacity 260ms ease, transform 260ms ease;
   }
 
-  /* ✅ Hide corner images when overlays are open/closing */
   .container.show-projects .top-left-image,
   .container.show-projects .bottom-right-image,
   .container.show-bio .top-left-image,
@@ -892,7 +889,6 @@
     opacity: 0;
     transform: scale(0.98);
   }
-
 
   @media (max-width: 520px){
     .quick-links{
@@ -1328,14 +1324,12 @@
                   <b>Systems:</b> Allen-Bradley CompactLogix L16 + Studio 5000 ladder logic, UR5 robot + Robotiq vision, FESTO conveyor + pressing station integration<br><br>
                   <b>Theme:</b> Real system integration + commissioning + I/O mapping<br><br>
                   Integrated a UR5 pick-and-place (with Robotiq vision) into a PLC-controlled conveyor + pressing system, replacing the standard handling station. Built custom wiring/harnessing and integrated additional I/O through terminal blocks to support gripper control and system communication.<br><br>
-
                   <b>Technical Scope:</b><br><br>
                   ● Program ladder logic in Studio 5000 for multi-station sequencing<br>
                   ● Establish system communication and signal flow across stations using modular connections (SysLink / D-sub) and PLC I/O expansion<br>
                   ● Train robot vision from the pendant to detect and pick a puck from variable positions<br>
                   ● Add and wire a pneumatic solenoid controlled via UR I/O for gripper actuation<br>
                   ● Commission and troubleshoot an integrated automation sequence<br><br>
-
                   <b>Work Performed</b><br><br>
                   ● Programmed ladder logic for real processing simulation and station coordination<br>
                   ● Built a custom I/O harness wired directly to robot's I/O and integrated it into the system via terminal blocks<br>
@@ -1343,7 +1337,6 @@
                   ● Performed commissioning: I/O checkout, dry-run tests, live cycle tests<br>
                   ● Troubleshot hardware/software issues and modified code in real time during debugging<br>
                   ● Achieved near-complete function during the presentation and reached full functionality shortly afterward, validating the final system to the instructor<br><br>
-
                   <b>Safety Considerations</b><br><br>
                   ● Pressing station fail-safe logic detected loss of air/failure to actuate within a defined time window<br>
                   ● UR collaborative robot features used intentionally: collision detection and programmed safety limits to restrict the work envelope<br>
@@ -1351,7 +1344,6 @@
                 </p>
 
                 <div class="detail-gallery">
-                  <!-- ✅ Trigger: PLC 1 Final gallery image #1 shows 4 extras in lightbox -->
                   <img
                     src="https://res.cloudinary.com/dhbpbyrc9/image/upload/I.O_CHART_AND_LOGIC_page-0001_kvnupk.jpg"
                     alt="PLC final photo 1"
@@ -1371,7 +1363,6 @@
                   <b>Systems:</b> 3-phase power simulation, forward/reverse motor control, safety relay + E-stop + reset, 24 VDC controls<br><br>
                   <b>Theme:</b> 3 phase motor control with timed interlocking forward and reverse control<br><br>
                   Designed and built a control system simulating an automatic skate sharpener using forward/reverse indexing and mode-based timing. Implemented safety relay control to remove motion power immediately on stop conditions while keeping sensing active.<br><br>
-                  
                   <b>Technical Scope:</b><br><br>
                   ● Wire 3-phase motor power through breakers/contactors to simulate industrial motor control<br>
                   ● Implement forward/reverse control with electrical/mechanical interlocking<br>
@@ -1379,14 +1370,12 @@
                   ● Use proximity sensor as a start, permissive and safety stop condition<br>
                   ● Integrate safety relay + E-stop with manual reset behaviour<br>
                   ● Separate and document power vs control schematics<br><br>
-
                   <b>Work Performed</b><br><br>
                   ● Wired 3-phase power circuits to contactors (kept de-energized during testing for safety)<br>
                   ● Built 24 VDC control logic for indexing and grinding motor enable<br>
                   ● Implemented mode-based indexing: 7 s (adult) / 3 s (child)<br>
                   ● Required part presence (prox) to start; immediate shutdown on part removal or stop<br>
                   ● Integrated safety relay so E-stop drops all motion power until manually reset<br><br>
-
                   <b>Safety Considerations</b><br><br>
                   ● E-stop drops motion power while allowing sensors to remain active (industry-aligned approach)<br>
                   ● Reset required after E-stop release before restarting the motion<br><br>
@@ -1411,7 +1400,7 @@
     </div>
   </div>
 
-<div class="overlay overlay-bio">
+  <div class="overlay overlay-bio">
     <div class="overlay-content">
       <button class="back-button" type="button">← Back to main</button>
 
@@ -1768,7 +1757,6 @@
     const urls = EXTRA_STOCK_MAP[key];
     if (!urls || !urls.length) return;
 
-    // ✅ if this is the PLC set, switch to 4 columns on desktop
     if (key === "plc-final-1") {
       lightboxExtrasGrid.classList.add("cols-4");
     }
