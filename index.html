@@ -8,7 +8,16 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  html, body {
+  html {
+    /* Scales smoothly from laptops → 1440p → 4K */
+    font-size: clamp(
+      14px,                  /* minimum (small screens) */
+      0.55vw + 0.55vh,       /* dynamic scaling */
+      22px                   /* cap so 4K doesn't get ridiculous */
+    );
+  }
+
+  body {
     width: 100%;
     height: 100%;
     overflow: hidden;
